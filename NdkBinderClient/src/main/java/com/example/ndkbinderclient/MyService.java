@@ -50,7 +50,7 @@ public class MyService extends Service
 
         @Override
         public int getPerforationFactor(int loopId) throws RemoteException {
-            return new Random().nextInt(10 - 1 + 1) + 1;
+            return new Random().nextInt(100 - 1 + 1) + 1;
         }
     }
 }

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.ConditionVariable;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private volatile boolean mIsServiceConnected = false;
     private final ConditionVariable mServiceConnectionWaitLock = new ConditionVariable();
     private TextView mTV = null;
+    private Button runButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -32,6 +34,33 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         setContentView(R.layout.activity_main);
 
         mTV = findViewById(R.id.sample_text);
+        runButton = findViewById(R.id.runButton);
+
+        runButton.setOnClickListener((v)->{
+
+            new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    runOnUiThread(new SetTextRunnable("Waiting to talk to IMyService..."));
+
+                    // Not connected to service yet?
+                    while(!mIsServiceConnected)
+                    {
+                        mServiceConnectionWaitLock.block(); // waits for service connection
+                    }
+
+                    runOnUiThread(new SetTextRunnable("Running test..."));
+
+                    String returnedString = talkToService(1000000);
+
+                    runOnUiThread(new SetTextRunnable(returnedString));
+                    runButton.setEnabled(true);
+                }
+            }).start();
+        });
+
     }
 
     @Override
@@ -46,25 +75,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         Log.d(Constants.LOG_TAG, "[App] [java] bindService");
 
         bindService(intent, this, BIND_AUTO_CREATE);
-
-        new Thread(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                runOnUiThread(new SetTextRunnable("Waiting to talk to IMyService..."));
-
-                // Not connected to service yet?
-                while(!mIsServiceConnected)
-                {
-                    mServiceConnectionWaitLock.block(); // waits for service connection
-                }
-
-                String returnedString = talkToService();
-
-                runOnUiThread(new SetTextRunnable("Talked to IMyService. Returned : " + returnedString));
-            }
-        }).start();
     }
 
     @Override
@@ -125,5 +135,5 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
      */
     public native void onServiceConnected(IBinder binder);
     public native void onServiceDisconnected();
-    public native String talkToService();
+    public native String talkToService(int numOfRuns);
 }

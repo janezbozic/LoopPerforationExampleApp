@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         runButton.setOnClickListener((v)->{
 
+            runButton.setEnabled(false);
+
             new Thread(new Runnable()
             {
                 @Override
@@ -53,10 +55,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
                     runOnUiThread(new SetTextRunnable("Running test..."));
 
-                    String returnedString = talkToService(1000000);
+                    String returnedString = talkToService(2);
 
                     runOnUiThread(new SetTextRunnable(returnedString));
-                    runButton.setEnabled(true);
+                    runOnUiThread(new SetButtonRunnable(true));
                 }
             }).start();
         });
@@ -126,6 +128,22 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         public void run()
         {
             mTV.setText(mText);
+        }
+    }
+
+    private class SetButtonRunnable implements Runnable
+    {
+        final boolean buttonEnabled;
+
+        SetButtonRunnable(boolean b)
+        {
+            buttonEnabled = b;
+        }
+
+        @Override
+        public void run()
+        {
+            runButton.setEnabled(buttonEnabled);
         }
     }
 

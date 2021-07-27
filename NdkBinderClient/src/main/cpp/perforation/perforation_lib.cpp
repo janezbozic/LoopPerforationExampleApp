@@ -8,7 +8,9 @@
 #include <aidl/com/example/IMyService.h>
 #include <android/binder_ibinder_jni.h>
 #include <LogDefs.h>
-#include <string.h>
+#include <cstring>
+#include <unordered_map>
+#include "LoopInfo.h"
 
 using aidl::com::example::IMyService;
 using ndk::ScopedAStatus;
@@ -16,32 +18,35 @@ using namespace std;
 
 std::shared_ptr<IMyService> g_spMyService;
 
-int prevC = -1;
-struct timeval lastTime, currentTime;
+std::unordered_map<int, LoopInfo> prevFactors;
 
+int CLANG_LOOP_PERFORATION_FUNCTION(int loopId){
 
-int CLANG_LOOP_PERFORATION_FUNCTION(int n){
-    int c;
+    auto itr = prevFactors.find(loopId);
 
+    struct timeval currentTime;
     gettimeofday(&currentTime, NULL);
+    int curTimeVal = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
 
-    if (prevC != -1 && (currentTime.tv_usec - lastTime.tv_usec) < 100000) {
-        return prevC;
+    if (itr != prevFactors.end() && curTimeVal - itr->second.getTime() < 5000000)
+        return itr->second.getStoredFactor();
+
+    int newFactor;
+    ScopedAStatus getPerforationFactorResult = g_spMyService->getPerforationFactor(loopId, &newFactor);
+
+    if (itr != prevFactors.end()) {
+        itr->second.setStoredFactor(newFactor);
+        itr->second.setTime(curTimeVal);
+    }
+    else {
+        LoopInfo newInfo;
+        newInfo.setLoopId(loopId);
+        newInfo.setStoredFactor(newFactor);
+        newInfo.setTime(curTimeVal);
+        prevFactors.insert(make_pair(loopId, newInfo));
     }
 
-    ScopedAStatus getPerforationFactorResult = g_spMyService->getPerforationFactor(n, &c);
-
-    prevC = c;
-    lastTime = currentTime;
-    /*if(getPerforationFactorResult.isOk())
-    {
-        LOGD("[App] [cpp] IMyService.basicTypes - Succeeded");
-    }
-    else
-    {
-        LOGE("[App] [cpp] IMyService.basicTypes - Failed");
-    }*/
-    return c;
+    return newFactor;
 }
 
 extern "C" JNIEXPORT void JNICALL

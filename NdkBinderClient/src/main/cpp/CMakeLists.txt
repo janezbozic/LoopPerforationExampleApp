@@ -6,7 +6,10 @@ add_library (
         native-lib
         SHARED
         LoopPerf.c
+        perforation/LoopInfo.cpp
         perforation/perforation_lib.cpp
+        tests/montecarlo/montecarlo.cpp
+        tests/blackscholes/blackScholes.cpp
         native-lib.cpp
         ${aidl_src_dir}/com/example/IMyService.cpp
 )

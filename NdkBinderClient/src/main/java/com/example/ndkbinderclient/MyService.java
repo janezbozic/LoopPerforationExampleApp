@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.example.Constants;
 import com.example.IMyService;
+import com.example.LoopPerfFactor;
 
 import java.util.Random;
 
@@ -49,8 +50,9 @@ public class MyService extends Service
         }
 
         @Override
-        public int getPerforationFactor(int loopId) throws RemoteException {
-            return new Random().nextInt(4 - 1 + 1) + 1;
+        public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
+            LoopPerfFactor t = new LoopPerfFactor(new Random().nextInt(4 - 1 + 1) + 1, 1000);
+            return t;
         }
     }
 }

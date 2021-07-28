@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 if (shadowPerf < 10)
                     handler.postDelayed(this, 1);
                 else
-                    runOnUiThread(new SetTextRunnable("Perforated: " + perfTime));
+                    runOnUiThread(new SetTextRunnable("Perforated: " + perfTime + "s"));
             }
         }, 100);
         perfTime = 0;
@@ -238,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 if (shadowNorm < 10)
                     handlerNorm.postDelayed(this, 1);
                 else {
-                    runOnUiThread(new SetTextRunnable(mTV.getText() + "\nNormal: " + normTime));
+                    runOnUiThread(new SetTextRunnable(mTV.getText() + "\nNormal: " + normTime + "s"));
                     runOnUiThread(new SetButtonRunnable(true));
                 }
             }

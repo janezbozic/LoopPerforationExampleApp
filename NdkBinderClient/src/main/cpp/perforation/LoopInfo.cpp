@@ -20,10 +20,26 @@ void LoopInfo::setStoredFactor(int storedFactor) {
     LoopInfo::storedFactor = storedFactor;
 }
 
-int LoopInfo::getTime() const {
-    return time;
+int LoopInfo::getLifeSpan() const {
+    return lifeSpan;
 }
 
-void LoopInfo::setTime(int time) {
-    LoopInfo::time = time;
+void LoopInfo::setLifeSpan(int lifeSpan) {
+    LoopInfo::lifeSpan = lifeSpan;
+}
+
+int LoopInfo::getTimeSec() const {
+    return timeSec;
+}
+
+void LoopInfo::setTimeSec(int timeSec) {
+    LoopInfo::timeSec = timeSec;
+}
+
+int LoopInfo::getTimeUSec() const {
+    return timeUSec;
+}
+
+void LoopInfo::setTimeUSec(int timeUSec) {
+    LoopInfo::timeUSec = timeUSec;
 }

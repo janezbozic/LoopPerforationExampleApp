@@ -50,9 +50,9 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
         normTime /= 1000000;
         perfTime /= 1000000;
 
-        hello = "\nNormal: " + std::to_string(normTime) + " All runs: " +
+        hello = "\nNormal: " + std::to_string(normTime) + "s All runs: " +
                             std::to_string(allRunsNorm) + "\nPerforated: " +
-                            std::to_string(perfTime) + " All runs: " + std::to_string(allRunsPerf);
+                            std::to_string(perfTime) + "s All runs: " + std::to_string(allRunsPerf);
     }
     else if (testid == 2){
 

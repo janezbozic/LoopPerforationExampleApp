@@ -1,6 +1,8 @@
 // IMyService.aidl
 package com.example;
 
+import com.example.LoopPerfFactor;
+
 interface IMyService {
     /**
      * Demonstrates some basic types that you can use as parameters
@@ -9,5 +11,5 @@ interface IMyService {
     void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat,
             double aDouble, String aString);
 
-    int getPerforationFactor (int loopId);
+    LoopPerfFactor getPerforationFactor (int loopId);
 }

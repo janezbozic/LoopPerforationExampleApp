@@ -10,20 +10,30 @@ class LoopInfo {
 
     int loopId;
     int storedFactor;
-    int time;
+    int timeSec;
+    int timeUSec;
+    int lifeSpan;
 
 public:
     int getStoredFactor() const;
 
     void setStoredFactor(int storedFactor);
 
-    int getTime() const;
+    int getTimeSec() const;
 
-    void setTime(int time);
+    void setTimeSec(int timeSec);
+
+    int getTimeUSec() const;
+
+    void setTimeUSec(int timeUSec);
 
     int getLoopId() const;
 
     void setLoopId(int loopId);
+
+    int getLifeSpan() const;
+
+    void setLifeSpan(int lifeSpan);
 
 };
 

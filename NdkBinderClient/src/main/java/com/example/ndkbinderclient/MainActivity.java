@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         spinner = findViewById(R.id.spinner);
 
-        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness"};
+        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_spinner_item, options);
@@ -103,14 +103,17 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                             runOnUiThread(new SetButtonRunnable(true));
                         break;
                         case 2:
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
+                            adjustBrightness();
+                        break;
+                        case 3:
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
                             adjustBrightness();
                         break;
                     }
                 }
             }).start();
         });
-
-        original = BitmapFactory.decodeResource(getResources(), R.drawable.wallace);
 
         imageView = (ImageView) findViewById(R.id.imageView);
         imageView2 = (ImageView) findViewById(R.id.imageView2);

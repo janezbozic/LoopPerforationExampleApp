@@ -16,7 +16,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++17 -lm"
+                cppFlags "-std=c++17 -lm -ljnigraphics"
                 arguments "-Daidl_src_dir=${[project(':Common').projectDir.absolutePath, 'src', 'main', 'cpp', 'aidl'].join(File.separator)}",
                           "-Dcommon_inc_dir=${[project(':Common').projectDir.absolutePath, 'src', 'main', 'cpp', 'includes'].join(File.separator)}"
             }
@@ -44,7 +44,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation project(path: ':Common')

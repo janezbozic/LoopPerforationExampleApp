@@ -5,6 +5,7 @@
 #include "LoopPerf.h"
 #include "tests/blackscholes/blackScholes.h"
 #include "tests/montecarlo/montecarlo.h"
+#include "tests/adjustbrightness/adjustBrightness.h"
 
 #include <sys/time.h>
 
@@ -81,4 +82,65 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
                 "\nDifference value: " + std::to_string(abs(normalRuns - perforatedRuns)/1000);
     }
     return env->NewStringUTF(hello.c_str());
+}
+
+int ***base;
+
+extern "C" JNIEXPORT jdouble JNICALL
+Java_com_example_ndkbinderclient_MainActivity_brightness(JNIEnv * env, jobject  obj, jobject bitmap, jfloat brightnessValue, jboolean perf, jboolean first)
+{
+
+    struct timeval stop, start;
+
+    AndroidBitmapInfo  info;
+    int ret;
+    void* pixels;
+
+    if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
+        std::string s = "AndroidBitmap_getInfo() failed ! error=" + std::to_string(ret);
+        return 0;
+    }
+    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        std::string s = "Bitmap format is not RGBA_8888 !";
+        return 0;
+    }
+
+    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
+        std::string s = "AndroidBitmap_lockPixels() failed ! error=" + std::to_string(ret);
+    }
+
+    if (first) {
+        void *pixelBase = pixels;
+        base = new int**[info.height];
+        uint32_t* line;
+        int red, green, blue;
+        for (int i = 0; i < info.height; i++) {
+            base[i] = new int*[info.width];
+            line = (uint32_t *) pixelBase;
+            for (int j = 0; j < info.width; j++) {
+                red = (int) ((line[j] & 0x00FF0000) >> 16);
+                green = (int) ((line[j] & 0x0000FF00) >> 8);
+                blue = (int) (line[j] & 0x00000FF);
+
+                base[i][j] = new int [3];
+
+                base[i][j][0] = red * brightnessValue;
+                base[i][j][1] = green * brightnessValue;
+                base[i][j][2] = blue * brightnessValue;
+            }
+            pixelBase = (char *) pixelBase + info.stride;
+        }
+    }
+
+    gettimeofday(&start, NULL);
+    brightness(&info,pixels, brightnessValue, perf, base);
+
+    AndroidBitmap_unlockPixels(env, bitmap);
+    gettimeofday(&stop, NULL);
+
+    double time = ((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+    time/=1000000;
+
+    return time;
+
 }

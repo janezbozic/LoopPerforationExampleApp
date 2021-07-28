@@ -3,11 +3,19 @@ package com.example.ndkbinderclient;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.ConditionVariable;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,6 +35,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private TextView mTV = null;
     private Button runButton;
 
+    private ImageView imageView;
+    private ImageView imageView2;
+    private Bitmap original;
+
+    Spinner spinner;
+
+    int test = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -36,10 +52,32 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         mTV = findViewById(R.id.sample_text);
         runButton = findViewById(R.id.runButton);
 
+        spinner = findViewById(R.id.spinner);
+
+        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness"};
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_spinner_item, options);
+
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                test = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                test = 0;
+            }
+        });
+
         runButton.setOnClickListener((v)->{
 
             runButton.setEnabled(false);
-
+            imageView.setImageBitmap(null);
+            imageView2.setImageBitmap(null);
             new Thread(new Runnable()
             {
                 @Override
@@ -55,13 +93,27 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
                     runOnUiThread(new SetTextRunnable("Running test..."));
 
-                    String returnedString = talkToService(2);
-
-                    runOnUiThread(new SetTextRunnable(returnedString));
-                    runOnUiThread(new SetButtonRunnable(true));
+                    switch (test){
+                        case 0:
+                            runOnUiThread(new SetTextRunnable(talkToService(1)));
+                            runOnUiThread(new SetButtonRunnable(true));
+                        break;
+                        case 1:
+                            runOnUiThread(new SetTextRunnable(talkToService(2)));
+                            runOnUiThread(new SetButtonRunnable(true));
+                        break;
+                        case 2:
+                            adjustBrightness();
+                        break;
+                    }
                 }
             }).start();
         });
+
+        original = BitmapFactory.decodeResource(getResources(), R.drawable.wallace);
+
+        imageView = (ImageView) findViewById(R.id.imageView);
+        imageView2 = (ImageView) findViewById(R.id.imageView2);
 
     }
 
@@ -147,6 +199,54 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }
     }
 
+    float shadowNorm = (float) 0.0;
+    double normTime = 0;
+
+    float shadowPerf = (float) 0.0;
+    double perfTime = 0;
+
+    private void adjustBrightness() {
+        Bitmap bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+        final Handler handler = new Handler(getMainLooper());
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                if (shadowPerf == 0)
+                    perfTime += brightness(bitmap, (float) 0.1, true, true);
+                else
+                    perfTime += brightness(bitmap, (float) 0.1, true, false);
+                imageView.setImageBitmap(bitmap);
+                shadowPerf = (float) (shadowPerf + 0.1);
+                if (shadowPerf < 10)
+                    handler.postDelayed(this, 1);
+                else
+                    runOnUiThread(new SetTextRunnable("Perforated: " + perfTime));
+            }
+        }, 100);
+        perfTime = 0;
+        shadowPerf = 0;
+
+        Bitmap bitmapNorm = original.copy(Bitmap.Config.ARGB_8888, true);
+        final Handler handlerNorm = new Handler(getMainLooper());
+        handlerNorm.postDelayed(new Runnable() {
+            public void run() {
+                if (shadowNorm == 0)
+                    normTime += brightness(bitmapNorm, (float) 0.1, false, true);
+                else
+                    normTime += brightness(bitmapNorm, (float) 0.1, false, false);
+                imageView2.setImageBitmap(bitmapNorm);
+                shadowNorm = (float) (shadowNorm + 0.1);
+                if (shadowNorm < 10)
+                    handlerNorm.postDelayed(this, 1);
+                else {
+                    runOnUiThread(new SetTextRunnable(mTV.getText() + "\nNormal: " + normTime));
+                    runOnUiThread(new SetButtonRunnable(true));
+                }
+            }
+        }, 100);
+        shadowNorm = 0;
+        normTime = 0;
+    }
+
     /**
      * A native methods that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
@@ -154,4 +254,5 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     public native void onServiceConnected(IBinder binder);
     public native void onServiceDisconnected();
     public native String talkToService(int numOfRuns);
+    public native double brightness(Bitmap bmp, float brightness, boolean perf, boolean first);
 }

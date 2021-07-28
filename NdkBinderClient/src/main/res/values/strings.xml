@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">NdkBinderClient</string>
+    <string name="welcomeTest">Please pick a test and press Run!</string>
+    <string name="runButtonText">Run</string>
 </resources>

@@ -28,7 +28,7 @@ int CLANG_LOOP_PERFORATION_FUNCTION(int loopId){
     gettimeofday(&currentTime, NULL);
     int curTimeVal = currentTime.tv_sec * 1000000 + currentTime.tv_usec;
 
-    if (itr != prevFactors.end() && curTimeVal - itr->second.getTime() < 5000000)
+    if (itr != prevFactors.end() && curTimeVal - itr->second.getTime() < 50000)
         return itr->second.getStoredFactor();
 
     int newFactor;

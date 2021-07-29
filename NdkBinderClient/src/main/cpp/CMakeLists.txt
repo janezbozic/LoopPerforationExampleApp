@@ -8,7 +8,7 @@ add_library (
         LoopPerf.c
         perforation/LoopInfo.cpp
         perforation/perforation_lib.cpp
-        tests/adjustbrightness/adjustBrightness.cpp
+        tests/imagetests/imagetests.cpp
         tests/montecarlo/montecarlo.cpp
         tests/blackscholes/blackScholes.cpp
         native-lib.cpp

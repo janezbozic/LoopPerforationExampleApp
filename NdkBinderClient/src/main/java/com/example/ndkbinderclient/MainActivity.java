@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         spinner = findViewById(R.id.spinner);
 
-        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280"};
+        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280", "Edge Detection"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_spinner_item, options);
@@ -109,6 +109,18 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         case 3:
                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
                             adjustBrightness();
+                        break;
+                        case 4:
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                            Bitmap bitmapBase = original.copy(Bitmap.Config.ARGB_8888, true);
+                            Bitmap bitmapToChange2 = original.copy(Bitmap.Config.ARGB_8888, true);
+                            double normTime = edgeDetection(bitmapBase, bitmapToChange2, false);
+                            runOnUiThread(new SetImageView2(bitmapToChange2));
+                            Bitmap bitmapToChange = original.copy(Bitmap.Config.ARGB_8888, true);
+                            double perfTime = edgeDetection(bitmapBase, bitmapToChange, true);
+                            runOnUiThread(new SetImageView(bitmapToChange));
+                            runOnUiThread(new SetTextRunnable("Normal time: " + normTime + "s\nPerforated time: " + perfTime + "s"));
+                            runOnUiThread(new SetButtonRunnable(true));
                         break;
                     }
                 }
@@ -202,6 +214,38 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }
     }
 
+    private class SetImageView implements Runnable
+    {
+        final Bitmap image;
+
+        SetImageView(Bitmap b)
+        {
+            image = b;
+        }
+
+        @Override
+        public void run()
+        {
+            imageView.setImageBitmap(image);
+        }
+    }
+
+    private class SetImageView2 implements Runnable
+    {
+        final Bitmap image;
+
+        SetImageView2(Bitmap b)
+        {
+            image = b;
+        }
+
+        @Override
+        public void run()
+        {
+            imageView2.setImageBitmap(image);
+        }
+    }
+
     float shadowNorm = (float) 0.0;
     double normTime = 0;
 
@@ -209,25 +253,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     double perfTime = 0;
 
     private void adjustBrightness() {
-        Bitmap bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
-        final Handler handler = new Handler(getMainLooper());
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                if (shadowPerf == 0)
-                    perfTime += brightness(bitmap, (float) 0.1, true, true);
-                else
-                    perfTime += brightness(bitmap, (float) 0.1, true, false);
-                imageView.setImageBitmap(bitmap);
-                shadowPerf = (float) (shadowPerf + 0.1);
-                if (shadowPerf < 10)
-                    handler.postDelayed(this, 1);
-                else
-                    runOnUiThread(new SetTextRunnable("Perforated: " + perfTime + "s"));
-            }
-        }, 100);
-        perfTime = 0;
-        shadowPerf = 0;
-
         Bitmap bitmapNorm = original.copy(Bitmap.Config.ARGB_8888, true);
         final Handler handlerNorm = new Handler(getMainLooper());
         handlerNorm.postDelayed(new Runnable() {
@@ -241,13 +266,32 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 if (shadowNorm < 10)
                     handlerNorm.postDelayed(this, 1);
                 else {
-                    runOnUiThread(new SetTextRunnable(mTV.getText() + "\nNormal: " + normTime + "s"));
+                    runOnUiThread(new SetTextRunnable("Normal: " + normTime + "s"));
                     runOnUiThread(new SetButtonRunnable(true));
                 }
             }
         }, 100);
         shadowNorm = 0;
         normTime = 0;
+
+        Bitmap bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+        final Handler handler = new Handler(getMainLooper());
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                if (shadowPerf == 0)
+                    perfTime += brightness(bitmap, (float) 0.1, true, true);
+                else
+                    perfTime += brightness(bitmap, (float) 0.1, true, false);
+                imageView.setImageBitmap(bitmap);
+                shadowPerf = (float) (shadowPerf + 0.1);
+                if (shadowPerf < 10)
+                    handler.postDelayed(this, 1);
+                else
+                    runOnUiThread(new SetTextRunnable(mTV.getText() + "\nPerforated: " + perfTime + "s"));
+            }
+        }, 100);
+        perfTime = 0;
+        shadowPerf = 0;
     }
 
     /**
@@ -258,4 +302,5 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     public native void onServiceDisconnected();
     public native String talkToService(int numOfRuns);
     public native double brightness(Bitmap bmp, float brightness, boolean perf, boolean first);
+    public native double edgeDetection(Bitmap bitmapBase, Bitmap bitmapToChange, boolean perf);
 }

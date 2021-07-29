@@ -5,7 +5,7 @@
 #include "LoopPerf.h"
 #include "tests/blackscholes/blackScholes.h"
 #include "tests/montecarlo/montecarlo.h"
-#include "tests/adjustbrightness/adjustBrightness.h"
+#include "tests/imagetests/imagetests.h"
 
 #include <sys/time.h>
 
@@ -134,12 +134,67 @@ Java_com_example_ndkbinderclient_MainActivity_brightness(JNIEnv * env, jobject  
 
     gettimeofday(&start, NULL);
     brightness(&info,pixels, brightnessValue, perf, base);
-
-    AndroidBitmap_unlockPixels(env, bitmap);
     gettimeofday(&stop, NULL);
 
-    double time = ((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
-    time/=1000000;
+    AndroidBitmap_unlockPixels(env, bitmap);
+
+    double time = ((stop.tv_sec - start.tv_sec)  + (double) (stop.tv_usec - start.tv_usec)/1000000);
+
+    return time;
+
+}
+
+extern "C" JNIEXPORT jdouble JNICALL
+Java_com_example_ndkbinderclient_MainActivity_edgeDetection(JNIEnv * env,
+                                                            jobject  obj,
+                                                            jobject bitmapBase,
+                                                            jobject bitmapToChange,
+                                                            jboolean perf) {
+
+    AndroidBitmapInfo  infoBase;
+    int retBase;
+    void* pixelsBase;
+
+    if ((retBase = AndroidBitmap_getInfo(env, bitmapBase, &infoBase)) < 0) {
+        std::string s = "AndroidBitmap_getInfo() failed ! error=" + std::to_string(retBase);
+        return 0;
+    }
+    if (infoBase.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        std::string s = "Bitmap format is not RGBA_8888 !";
+        return 0;
+    }
+
+    if ((retBase = AndroidBitmap_lockPixels(env, bitmapBase, &pixelsBase)) < 0) {
+        std::string s = "AndroidBitmap_lockPixels() failed ! error=" + std::to_string(retBase);
+    }
+
+    AndroidBitmapInfo  infoToChange;
+    int retToChange;
+    void* pixelsToChange;
+
+    if ((retToChange = AndroidBitmap_getInfo(env, bitmapToChange, &infoToChange)) < 0) {
+        std::string s = "AndroidBitmap_getInfo() failed ! error=" + std::to_string(retToChange);
+        return 0;
+    }
+    if (infoToChange.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        std::string s = "Bitmap format is not RGBA_8888 !";
+        return 0;
+    }
+
+    if ((retToChange = AndroidBitmap_lockPixels(env, bitmapToChange, &pixelsToChange)) < 0) {
+        std::string s = "AndroidBitmap_lockPixels() failed ! error=" + std::to_string(retToChange);
+    }
+
+    struct timeval stop, start;
+    gettimeofday(&start, NULL);
+    edgeDetection(&infoBase, pixelsBase, &infoToChange, pixelsToChange, perf);
+    gettimeofday(&stop, NULL);
+
+
+    AndroidBitmap_unlockPixels(env, bitmapBase);
+    AndroidBitmap_unlockPixels(env, bitmapToChange);
+
+    double time = ((stop.tv_sec - start.tv_sec)  + (double)(stop.tv_usec - start.tv_usec)/1000000);
 
     return time;
 

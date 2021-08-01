@@ -6,10 +6,11 @@
 #include "tests/blackscholes/blackScholes.h"
 #include "tests/montecarlo/montecarlo.h"
 #include "tests/imagetests/imagetests.h"
-
-#include <sys/time.h>
+#include <unistd.h>
 
 #include <android/asset_manager.h>
+
+using namespace std;
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_example_ndkbinderclient_MainActivity_talkToService(
@@ -30,28 +31,36 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
 
     if (testid == 1) {
 
-        for (int i = 0; i < 10000; i++) {
+        int NUM_REP = 100;
 
-            gettimeofday(&start, NULL);
+        for (int i = 0; i < NUM_REP; i++) {
+
+            auto start = chrono::steady_clock::now();
             startBalckScholes(false);
-            gettimeofday(&stop, NULL);
-            normTime += ((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+            auto end = chrono::steady_clock::now();
+            normTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
             allRunsNorm += getNewCount();
             resetNewCount();
 
-            gettimeofday(&start, NULL);
+            start = chrono::steady_clock::now();
             startBalckScholes(true);
-            gettimeofday(&stop, NULL);
-            perfTime += ((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+            end = chrono::steady_clock::now();
+            perfTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
             allRunsPerf += getNewCount();
             resetNewCount();
+
+            sleep(1);
         }
 
-        normTime /= 1000000;
-        perfTime /= 1000000;
+        normTime /= NUM_REP;
+        perfTime /= NUM_REP;
 
-        hello = "\nNormal: " + std::to_string(normTime) + "s All runs: " +
-                            std::to_string(allRunsNorm) + "\nPerforated: " +
+        allRunsPerf /= NUM_REP;
+        allRunsNorm /= NUM_REP;
+
+        hello = "Average of " + std::to_string(NUM_REP) + " tests of 1000 runs of test's main loop:" +
+                            "\n\tNormal: " + std::to_string(normTime) + "s All runs: " +
+                            std::to_string(allRunsNorm) + "\n\tPerforated: " +
                             std::to_string(perfTime) + "s All runs: " + std::to_string(allRunsPerf);
     }
     else if (testid == 2){
@@ -59,27 +68,35 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
         double perforatedRuns = 0;
         double normalRuns = 0;
 
-        for (int i = 0; i < 1000; i++) {
+        int NUM_REP = 100;
 
-            gettimeofday(&start, NULL);
+        for (int i = 0; i < NUM_REP; i++) {
+
+            auto start = chrono::steady_clock::now();
             normalRuns += runMonteCarlo(false);
-            gettimeofday(&stop, NULL);
-            normTime += ((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+            auto end = chrono::steady_clock::now();
+            normTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
 
-            gettimeofday(&start, NULL);
+            start = chrono::steady_clock::now();
             perforatedRuns += runMonteCarlo(true);
-            gettimeofday(&stop, NULL);
-            perfTime += ((stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec);
+            end = chrono::steady_clock::now();
+            perfTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
+
+            sleep(1);
         }
 
         double diffPercent = (abs(normalRuns - perforatedRuns)/normalRuns)*100;
 
-        normTime /= 1000000;
-        perfTime /= 1000000;
+        normTime /= NUM_REP;
+        perfTime /= NUM_REP;
 
-        hello = "\nNormal: " + std::to_string(normTime) + "s\nPerforated: " +
-                std::to_string(perfTime) + "s\nAvg. Difference: " + std::to_string(diffPercent) + "%" +
-                "\nDifference value: " + std::to_string(abs(normalRuns - perforatedRuns)/1000);
+        perforatedRuns /= NUM_REP;
+        normalRuns /= NUM_REP;
+
+        hello = "Average of " + std::to_string(NUM_REP) + " tests of 128*(4^5) runs of test's main loop:" +
+                "\n\tNormal: " + std::to_string(normTime) + "s\n\tPerforated: " +
+                std::to_string(perfTime) + "s\n\tAvg. Difference: " + std::to_string(diffPercent) + "%" +
+                "\n\tDifference value: " + std::to_string(abs(normalRuns - perforatedRuns));
     }
     return env->NewStringUTF(hello.c_str());
 }
@@ -89,8 +106,6 @@ int ***base;
 extern "C" JNIEXPORT jdouble JNICALL
 Java_com_example_ndkbinderclient_MainActivity_brightness(JNIEnv * env, jobject  obj, jobject bitmap, jfloat brightnessValue, jboolean perf, jboolean first)
 {
-
-    struct timeval stop, start;
 
     AndroidBitmapInfo  info;
     int ret;
@@ -132,13 +147,13 @@ Java_com_example_ndkbinderclient_MainActivity_brightness(JNIEnv * env, jobject  
         }
     }
 
-    gettimeofday(&start, NULL);
+    auto start = chrono::steady_clock::now();
     brightness(&info,pixels, brightnessValue, perf, base);
-    gettimeofday(&stop, NULL);
+    auto end = chrono::steady_clock::now();
 
     AndroidBitmap_unlockPixels(env, bitmap);
 
-    double time = ((stop.tv_sec - start.tv_sec)  + (double) (stop.tv_usec - start.tv_usec)/1000000);
+    double time = ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
 
     return time;
 
@@ -185,16 +200,15 @@ Java_com_example_ndkbinderclient_MainActivity_edgeDetection(JNIEnv * env,
         std::string s = "AndroidBitmap_lockPixels() failed ! error=" + std::to_string(retToChange);
     }
 
-    struct timeval stop, start;
-    gettimeofday(&start, NULL);
+    auto start = chrono::steady_clock::now();
     edgeDetection(&infoBase, pixelsBase, &infoToChange, pixelsToChange, perf);
-    gettimeofday(&stop, NULL);
+    auto end = chrono::steady_clock::now();
 
 
     AndroidBitmap_unlockPixels(env, bitmapBase);
     AndroidBitmap_unlockPixels(env, bitmapToChange);
 
-    double time = ((stop.tv_sec - start.tv_sec)  + (double)(stop.tv_usec - start.tv_usec)/1000000);
+    double time = ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
 
     return time;
 

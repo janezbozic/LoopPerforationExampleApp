@@ -24,7 +24,7 @@ std::unordered_map<int, LoopInfo> prevFactors;
 
 int CLANG_LOOP_PERFORATION_FUNCTION(int loopId){
 
-        auto itr = prevFactors.find(loopId);
+    auto itr = prevFactors.find(loopId);
 
     struct timeval currentTime;
     gettimeofday(&currentTime, NULL);

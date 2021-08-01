@@ -33,7 +33,7 @@ double runMonteCarlo(bool perf)
 double myFunction(double x)
 //Function to integrate
 {
-    return exp(-1*pow(x-6,4)) +  + exp(-1*pow(x-14,4));
+    return exp(-1*pow(x-6,4)) + exp(-1*pow(x-14,4));
 }
 
 void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, double statsArray[], bool perf)

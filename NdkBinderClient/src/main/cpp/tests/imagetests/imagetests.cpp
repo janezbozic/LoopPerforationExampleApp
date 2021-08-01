@@ -43,6 +43,7 @@ void brightness(AndroidBitmapInfo* info, void* pixels, float brightnessValue, bo
         #pragma clang loop perforate (enable)
         for (yy = 0; yy < info->height; yy++) {
             line = (uint32_t *) ((char*)pixels+(yy*info->stride));
+            #pragma clang loop perforate (enable)
             for (xx = 0; xx < info->width; xx++) {
 
                 //extract the RGB values from the pixel

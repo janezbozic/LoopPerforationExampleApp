@@ -12,9 +12,11 @@
 
 using namespace std;
 
+int sss = 0;
+
 #define fptype float
 
-#define NUM_RUNS 100
+#define NUM_RUNS 1000
 
 typedef struct OptionData_ {
     fptype s;          // spot price
@@ -257,43 +259,6 @@ int startBalckScholes (bool perf)
     fflush(NULL);
 
     nThreads = 1;
-    char *inputFile = "";
-    char *outputFile = "";
-
-    //Read input data from file
-    /*file = fopen(inputFile, "r");
-    if(file == NULL) {
-        LOGD("ERROR: Unable to open file `%s'.\n", inputFile);
-        exit(1);
-    }
-    rv = fscanf(file, "%i", &numOptions);
-    if(rv != 1) {
-        LOGD("ERROR: Unable to read from file `%s'.\n", inputFile);
-        fclose(file);
-        exit(1);
-    }
-    if(nThreads > numOptions) {
-        LOGD("WARNING: Not enough work, reducing number of threads to match number of options.\n");
-        nThreads = numOptions;
-    }
-
-    // alloc spaces for the option data
-    dataL = (OptionData*)malloc(numOptions*sizeof(OptionData));
-    prices = (fptype*)malloc(numOptions*sizeof(fptype));
-    for ( loopnum = 0; loopnum < numOptions; ++ loopnum )
-    {
-        rv = fscanf(file, "%f %f %f %f %f %f %c %f %f", &dataL[loopnum].s, &dataL[loopnum].strike, &dataL[loopnum].r, &dataL[loopnum].divq, &dataL[loopnum].v, &dataL[loopnum].t, &dataL[loopnum].OptionType, &dataL[loopnum].divs, &dataL[loopnum].DGrefval);
-        if(rv != 9) {
-            LOGD("ERROR: Unable to read from file `%s'.\n", inputFile);
-            fclose(file);
-            exit(1);
-        }
-    }
-    rv = fclose(file);
-    if(rv != 0) {
-        LOGD("ERROR: Unable to close file `%s'.\n", inputFile);
-        exit(1);
-    }*/
 
     numOptions = 4;
 
@@ -341,9 +306,6 @@ int startBalckScholes (bool perf)
     dataL[3].divs = 0.00;
     dataL[3].DGrefval = 8.591659601309890704;
 
-    // LOGD("Num of Options: %d\n", numOptions);
-    // LOGD("Num of Runs: %d\n", NUM_RUNS);
-
 #define PAD 256
 #define LINESIZE 64
 
@@ -366,47 +328,9 @@ int startBalckScholes (bool perf)
         otime[i]      = dataL[i].t;
     }
 
-    //LOGD("Size of dataL: %d\n", numOptions * (sizeof(OptionData) + sizeof(int)));
-
     //serial version
     int tid=0;
     bs_thread(&tid, perf);
-
-    // LOGD("Number of perforated runs: %d\n", newcount);
-
-
-    //Write prices to output file
-    /* file = fopen(outputFile, "w");
-     LOGD("1");
-     if(file == NULL) {
-         LOGD("ERROR: Unable to open file `%s'.\n", outputFile);
-         exit(1);
-     }
-     rv = fprintf(file, "%i\n", numOptions);
-     LOGD("2");
-     if(rv < 0) {
-         LOGD("ERROR: Unable to write to file `%s'.\n", outputFile);
-         fclose(file);
-         exit(1);
-     }
-     LOGD("3");
-     for(i=0; i<numOptions; i++) {
-         rv = fprintf(file, "%.18f\n", prices[i]);
-         if(rv < 0) {
-             LOGD("ERROR: Unable to write to file `%s'.\n", outputFile);
-             fclose(file);
-             exit(1);
-         }
-     }
-     rv = fclose(file);
-     if(rv != 0) {
-         LOGD("ERROR: Unable to close file `%s'.\n", outputFile);
-         exit(1);
-     }*/
-
-    /*for(i=0; i<numOptions; i++) {
-        LOGD("%.18f\n", prices[i]);
-    }*/
 
     free(dataL);
     free(prices);

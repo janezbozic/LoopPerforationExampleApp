@@ -2,6 +2,8 @@
 // Created by janez on 27. 07. 21.
 //
 
+//This test is taken from the Parsec Benchmark Suite (https://parsec.cs.princeton.edu/)
+
 #include "blackScholes.h"
 #include "../../perforation/perforation_lib.h"
 
@@ -11,8 +13,6 @@
 #include <cstring>
 
 using namespace std;
-
-int sss = 0;
 
 #define fptype float
 
@@ -210,6 +210,7 @@ int bs_thread(void *tid_ptr, bool perf) {
     int start = tid * (numOptions / nThreads);
     int end = start + (numOptions / nThreads);
 
+    //Loop we are perforating
     if (perf) {
 #pragma clang loop perforate (enable)
         for (j = 0; j < NUM_RUNS; j++) {
@@ -226,6 +227,7 @@ int bs_thread(void *tid_ptr, bool perf) {
             }
         }
     }
+    //Same loop, but without perforation
     else {
         for (j = 0; j < NUM_RUNS; j++) {
             countAdd();
@@ -245,6 +247,7 @@ int bs_thread(void *tid_ptr, bool perf) {
     return 0;
 }
 
+//Test's main function
 int startBalckScholes (bool perf)
 {
 
@@ -265,6 +268,7 @@ int startBalckScholes (bool perf)
     dataL = (OptionData*)malloc(numOptions*sizeof(OptionData));
     prices = (fptype*)malloc(numOptions*sizeof(fptype));
 
+    //Input data
     dataL[0].s = 42.00;
     dataL[0].s = 42.00;
     dataL[0].strike = 40.00;

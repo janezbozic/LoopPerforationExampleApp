@@ -5,7 +5,6 @@ project("ndkbinderclient")
 add_library (
         native-lib
         SHARED
-        LoopPerf.c
         perforation/LoopInfo.cpp
         perforation/perforation_lib.cpp
         tests/imagetests/imagetests.cpp

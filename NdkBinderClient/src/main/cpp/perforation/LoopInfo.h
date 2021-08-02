@@ -5,7 +5,7 @@
 #ifndef ANDROIDNDKBINDEREXAMPLES_LOOPINFO_H
 #define ANDROIDNDKBINDEREXAMPLES_LOOPINFO_H
 
-
+//Custom object for caching the perforation factors and their infomation
 class LoopInfo {
 
     int loopId;

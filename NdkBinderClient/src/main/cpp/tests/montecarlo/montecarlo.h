@@ -9,6 +9,7 @@
 extern "C" {
 #endif
 
+//Main function of the test
 double runMonteCarlo(bool perf);
 
 

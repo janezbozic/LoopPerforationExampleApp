@@ -9,8 +9,10 @@
 extern "C" {
 #endif
 
+//Main test function
 int startBalckScholes (bool perf);
 
+//Number of iterations in the test's main loop
 int getNewCount();
 void resetNewCount();
 

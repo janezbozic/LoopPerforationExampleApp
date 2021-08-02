@@ -2,6 +2,8 @@
 // Created by janez on 27. 07. 21.
 //
 
+//This test is adopted from
+
 #include "montecarlo.h"
 #include "../../perforation/perforation_lib.h"
 #include <iostream>
@@ -11,6 +13,7 @@
 double myFunction(double x);
 void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, double mcStats[], bool perf);
 
+//Test's main function
 double runMonteCarlo(bool perf)
 {
 
@@ -46,6 +49,7 @@ void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, doub
     int iter = 0;
 
     if (perf) {
+        //Our perforated loop
         #pragma clang loop perforate(enable)
         while (iter < iterations - 1) {
 
@@ -60,6 +64,7 @@ void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, doub
         }
     }
     else {
+        //Same loop, but not perforated
         while (iter<iterations-1)
         {
 

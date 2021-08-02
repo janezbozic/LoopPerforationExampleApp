@@ -4,6 +4,8 @@
 
 #include "LoopInfo.h"
 
+//Custom object for caching the perforation factors and their infomation
+
 int LoopInfo::getLoopId() const {
     return loopId;
 }

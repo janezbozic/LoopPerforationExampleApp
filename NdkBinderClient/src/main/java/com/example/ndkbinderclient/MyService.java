@@ -51,7 +51,7 @@ public class MyService extends Service
 
         @Override
         public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
-            LoopPerfFactor t = new LoopPerfFactor(new Random().nextInt(4 - 1 + 1) + 1, 1000);
+            LoopPerfFactor t = new LoopPerfFactor(new Random().nextInt(2 - 1 + 1) + 1, 1000);
             return t;
         }
     }

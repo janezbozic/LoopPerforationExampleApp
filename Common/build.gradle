@@ -54,12 +54,3 @@ task compileAidlNdk() {
 afterEvaluate {
     preBuild.dependsOn(compileAidlNdk)
 }
-
-clean.doLast {
-    def outDir = [projectDir.absolutePath, 'src', 'main', 'cpp', 'aidl'].join(File.separator)
-
-    def headerOutDir = [projectDir.absolutePath, 'src', 'main', 'cpp', 'includes'].join(File.separator)
-
-    file(outDir).deleteDir()
-    file(headerOutDir).deleteDir()
-}

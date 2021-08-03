@@ -11,5 +11,7 @@ interface IMyService {
     void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat,
             double aDouble, String aString);
 
+    //Declaration of a method for returning perforation factor
+    //  AIDL will build the source
     LoopPerfFactor getPerforationFactor (int loopId);
 }

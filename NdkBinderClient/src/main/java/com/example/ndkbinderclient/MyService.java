@@ -49,6 +49,7 @@ public class MyService extends Service
             Log.d(Constants.LOG_TAG, str.toString());
         }
 
+        //Method for calculating perforation factor
         @Override
         public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
             LoopPerfFactor t = new LoopPerfFactor(new Random().nextInt(2 - 1 + 1) + 1, 1000);

@@ -5,7 +5,7 @@ plugins {
 android {
     compileSdkVersion 30
     buildToolsVersion '30.0.3'
-    ndkPath "/mnt/DataLinux/ndk/out/linux/android-ndk-r23-canary"
+    ndkPath "/mnt/DataLinux/ndk/out/linux/android-ndk-r23-canary" //Needed for local NDK with perforation pass
 
     defaultConfig {
         applicationId "com.example.ndkbinderclient"

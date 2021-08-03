@@ -3,6 +3,8 @@ package com.example;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+//Java class for sending data (parcels) custom LoopPerfFactor through AIDL
+
 public class LoopPerfFactor implements Parcelable
 {
     public final int perfFactor;

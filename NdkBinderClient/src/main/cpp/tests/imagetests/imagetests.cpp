@@ -91,6 +91,7 @@ void brightness(AndroidBitmapInfo* info, void* pixels, float brightnessValue, bo
 
 void edgeDetection(AndroidBitmapInfo* infoBase, void* pixelsBase, AndroidBitmapInfo* infoToChange, void* pixelsToChange, bool perf){
 
+    //Sobel matrix
     int kx[3][3] = {-1, 0, 1, -2, 0, 2, -1, 0, 1};
     int ky[3][3] = {1, 2, 1, 0, 0, 0, -1, -2, -1};
 
@@ -103,6 +104,7 @@ void edgeDetection(AndroidBitmapInfo* infoBase, void* pixelsBase, AndroidBitmapI
         for (yy = 0; yy < infoBase->height; yy++) {
             if (yy == 0 || yy == infoBase->height - 1)
                 continue;
+            //Previous and next line
             lineBase = (uint32_t *) ((char *) pixelsBase + (yy * infoBase->stride));
             lineToChange = (uint32_t *) ((char *) pixelsToChange + (yy * infoBase->stride));
             uint32_t *prevLineBase = (uint32_t *) ((char *) pixelsBase +
@@ -113,6 +115,7 @@ void edgeDetection(AndroidBitmapInfo* infoBase, void* pixelsBase, AndroidBitmapI
             for (xx = 0; xx < infoBase->width; xx++) {
                 if (xx == 0 || xx == infoBase->height - 1)
                     continue;
+                //Sobel operator calculation
                 int a = (redFun(prevLineBase[xx - 1]) + blueFun(prevLineBase[xx - 1])
                          + greenFun(prevLineBase[xx - 1])) / 3;
                 int b = (redFun(prevLineBase[xx]) + blueFun(prevLineBase[xx])
@@ -297,6 +300,7 @@ void stackblurJob(unsigned char* src,                ///< input image data
     unsigned char shr_sum = stackblur_shr[radius];
     unsigned char stack[div * 3];
 
+    //step 1
     for(y = 0; y < h; y++)
     {
         sum_r = sum_g = sum_b =

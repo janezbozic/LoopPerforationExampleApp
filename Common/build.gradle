@@ -30,6 +30,7 @@ dependencies {
 }
 
 task compileAidlNdk() {
+    //Building AIDL specifications for import in our project
     doLast {
         def aidl = [android.sdkDirectory, 'build-tools', android.buildToolsVersion,
                     'aidl'].join(File.separator)
@@ -55,11 +56,10 @@ afterEvaluate {
 }
 
 clean.doLast {
-    def aidlCppOutDir = [projectDir.absolutePath, 'src', 'main', 'cpp', 'aidl'].join(File.separator)
+    def outDir = [projectDir.absolutePath, 'src', 'main', 'cpp', 'aidl'].join(File.separator)
 
-    def aidlCppHeaderOutDir = [projectDir.absolutePath, 'src', 'main', 'cpp', 'includes',
-                            'aidl'].join(File.separator)
+    def headerOutDir = [projectDir.absolutePath, 'src', 'main', 'cpp', 'includes'].join(File.separator)
 
-    file(aidlCppOutDir).deleteDir()
-    file(aidlCppHeaderOutDir).deleteDir()
+    file(outDir).deleteDir()
+    file(headerOutDir).deleteDir()
 }

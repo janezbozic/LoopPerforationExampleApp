@@ -10,8 +10,8 @@ add_library (
         tests/imagetests/imagetests.cpp
         tests/montecarlo/montecarlo.cpp
         tests/blackscholes/blackScholes.cpp
-        native-lib.cpp
         ${aidl_src_dir}/com/example/IMyService.cpp
+        native-lib.cpp
 )
 
 target_include_directories (

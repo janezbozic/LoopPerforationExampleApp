@@ -11,7 +11,7 @@
 #include <cmath>
 
 double myFunction(double x);
-void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, double mcStats[], bool perf);
+double monteCarloEstimateSTD(double lowBound, double upBound, int iterations, bool perf);
 
 //Test's main function
 double runMonteCarlo(bool perf)
@@ -27,9 +27,7 @@ double runMonteCarlo(bool perf)
 
     iterations = 128*pow(4,5);
 
-    monteCarloEstimateSTD(lowerBound, upperBound,iterations, mcStats, perf);
-
-    return mcStats[1];
+    return monteCarloEstimateSTD(lowerBound, upperBound,iterations, perf);
 }
 
 
@@ -39,12 +37,13 @@ double myFunction(double x)
     return exp(-1*pow(x-6,4)) + exp(-1*pow(x-14,4));
 }
 
-void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, double statsArray[], bool perf)
+double monteCarloEstimateSTD(double lowBound, double upBound, int iterations, bool perf)
 //Function to execute Monte Carlo integration on predefined function, calculates STD
 {
 
     double totalSum = 0;
-    double totalSumSquared = 0;
+
+    volatile int trueIterations = 0;
 
     int iter = 0;
 
@@ -58,8 +57,8 @@ void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, doub
             double functionVal = myFunction(randNum);
 
             totalSum += functionVal;
-            totalSumSquared += pow(functionVal, 2);
 
+            trueIterations++;
             iter++;
         }
     }
@@ -73,21 +72,13 @@ void monteCarloEstimateSTD(double lowBound, double upBound, int iterations, doub
             double functionVal = myFunction(randNum);
 
             totalSum += functionVal;
-            totalSumSquared+= pow(functionVal,2);
 
+            trueIterations++;
             iter++;
         }
     }
 
-    double estimate = (upBound-lowBound)*totalSum/iterations; //For normal solve
+    double estimate = (upBound-lowBound)*totalSum/(trueIterations+1); //For normal solve
 
-    double expected = totalSum/iterations;
-
-    double expectedSquare = totalSumSquared/iterations;
-
-    double std = (upBound-lowBound)*pow( (expectedSquare-pow(expected,2))/(iterations-1) ,0.5);
-
-    statsArray[0] = estimate;
-    statsArray[1] = std;
-
+    return estimate;
 }

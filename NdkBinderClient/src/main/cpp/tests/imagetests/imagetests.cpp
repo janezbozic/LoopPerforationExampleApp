@@ -100,7 +100,7 @@ void edgeDetection(AndroidBitmapInfo* infoBase, void* pixelsBase, AndroidBitmapI
     uint32_t* lineToChange;
 
     if (perf) {
-        #pragma clang loop perforate (enable)
+#pragma clang loop perforate (enable)
         for (yy = 0; yy < infoBase->height; yy++) {
             if (yy == 0 || yy == infoBase->height - 1)
                 continue;
@@ -111,7 +111,6 @@ void edgeDetection(AndroidBitmapInfo* infoBase, void* pixelsBase, AndroidBitmapI
                                                    ((yy - 1) * infoBase->stride));
             uint32_t *nextLineBase = (uint32_t *) ((char *) pixelsBase +
                                                    ((yy + 1) * infoBase->stride));
-            #pragma clang loop perforate (enable)
             for (xx = 0; xx < infoBase->width; xx++) {
                 if (xx == 0 || xx == infoBase->height - 1)
                     continue;

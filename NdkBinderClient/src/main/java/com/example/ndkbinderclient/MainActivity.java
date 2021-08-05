@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 //Every time we set image, so the users see the difference of every increment
                 imageView2.setImageBitmap(bitmapNorm);
                 shadowNorm = (float) (shadowNorm + 0.1);
-                if (shadowNorm < 6)
+                if (shadowNorm < 10)
                     handlerNorm.postDelayed(this, 1);
                 else {
                     //At the end we output test time results

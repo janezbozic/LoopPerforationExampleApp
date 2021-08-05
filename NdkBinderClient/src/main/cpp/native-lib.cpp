@@ -61,8 +61,6 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
             //Set counter of execution to 0
             resetNewCount();
 
-            //Wait for 1s on the end of every test
-            sleep(1);
         }
 
         normTime /= NUM_REP;
@@ -105,8 +103,6 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
             //Adding execution time to sum of non-perforated runs
             perfTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
 
-            //Setting return the result of the test
-            sleep(1);
         }
 
         //Calculating avg. percent of difference in the results

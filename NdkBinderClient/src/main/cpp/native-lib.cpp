@@ -1,13 +1,9 @@
 #include <jni.h>
 #include <string>
-#include <LogDefs.h>
 
 #include "tests/blackscholes/blackScholes.h"
 #include "tests/montecarlo/montecarlo.h"
 #include "tests/imagetests/imagetests.h"
-#include <unistd.h>
-
-#include <android/asset_manager.h>
 
 using namespace std;
 

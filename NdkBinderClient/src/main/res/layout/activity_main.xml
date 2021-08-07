@@ -7,16 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="349dp"
-        android:layout_height="228dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView"
-        app:layout_constraintVertical_bias="0.333" />
-
     <TextView
         android:id="@+id/sample_text"
         android:layout_width="wrap_content"
@@ -42,10 +32,11 @@
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="349dp"
-        android:layout_height="228dp"
+        android:layout_width="388dp"
+        android:layout_height="322dp"
         android:layout_marginTop="40dp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.478"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sample_text" />
 

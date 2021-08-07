@@ -2,9 +2,12 @@ package com.example.ndkbinderclient;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.Constants;
 import com.example.IMyService;
@@ -32,7 +35,7 @@ public class MyService extends Service
         return mBinder;
     }
 
-    private static class MyServiceBinder extends IMyService.Stub
+    private class MyServiceBinder extends IMyService.Stub
     {
         @Override
         public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat,
@@ -49,10 +52,22 @@ public class MyService extends Service
             Log.d(Constants.LOG_TAG, str.toString());
         }
 
+        int perforationFactor = 0;
+
         //Method for calculating perforation factor
         @Override
         public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
-            LoopPerfFactor t = new LoopPerfFactor(8, 6000000);
+            if (loopId == 105440720) //Specific for the build
+                perforationFactor++;
+            LoopPerfFactor t = new LoopPerfFactor(perforationFactor, 12000000);
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+
+                @Override
+                public void run() {
+                    Toast.makeText(getBaseContext(),"Perforation factor is: " + perforationFactor,Toast.LENGTH_SHORT).show();
+                }
+            });
             return t;
         }
     }

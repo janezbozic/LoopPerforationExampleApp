@@ -70,9 +70,9 @@ void brightness(AndroidBitmapInfo* info, void* pixels, float brightnessValue, bo
             for (xx = 0; xx < info->width; xx++) {
 
                 //extract the RGB values from the pixel
-                red = redFun(line[xx]);
-                green = greenFun(line[xx]);
-                blue = blueFun(line[xx]);
+                red = (int) ((line[xx] & 0x00FF0000) >> 16);
+                green = (int) ((line[xx] & 0x0000FF00) >> 8);
+                blue = (int) (line[xx] & 0x00000FF);
 
                 //manipulate each value
                 red = rgb_clamp((int) (red + pixelsBase[yy][xx][0]));

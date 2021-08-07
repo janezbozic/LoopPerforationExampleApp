@@ -13,3 +13,10 @@ call inserted in compilation step
 ## Prerequisites:
 For running the perforation part of the code, which is using #pragma clang loop perforate (enable),
 we have to use ndk, which uses [LLVM-Project](https://github.com/janezbozic/llvm-project)
+
+## Video demo of picture brightness:
+
+For code switch to brightnessChanges branch
+
+https://user-images.githubusercontent.com/33355095/128611085-4f3f8df1-d4e3-42d6-8ad3-4bd9d41d1fd8.mp4
+

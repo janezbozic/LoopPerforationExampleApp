@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private ImageView imageView;
     private ImageView imageView2;
     private Bitmap original;
+    private boolean firstBrightnessRun;
 
     Spinner spinner;
 
@@ -53,8 +54,9 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         runButton = findViewById(R.id.runButton);
 
         spinner = findViewById(R.id.spinner);
+        firstBrightnessRun = true;
 
-        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280", "Edge Detection", "Blur Filter", "Remove Noise"};
+        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280", "Edge Detection", "Blur Filter"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_spinner_item, options);
@@ -153,23 +155,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                             runOnUiThread(new SetTextRunnable("Normal time: " + normTimeBlur + "s\nPerforated time: " + perfTimeBlur + "s"));
                             runOnUiThread(new SetButtonRunnable(true));
                         break;
-                        case 6:
-                            //Setting base bitmap
-                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                            //Setting working copy
-                            Bitmap bitmapNoise = original.copy(Bitmap.Config.ARGB_8888, true);
-                            double normTimeNoise = removeNoise(bitmapNoise, false);
-                            //Setting image on UI thread
-                            runOnUiThread(new SetImageView(bitmapNoise));
-                            //Setting working copy
-                            Bitmap bitmapNoisePerf = original.copy(Bitmap.Config.ARGB_8888, true);
-                            double perfTimeNoise = removeNoise(bitmapNoisePerf,  true);
-                            //Setting perforated image
-                            runOnUiThread(new SetImageView2(bitmapNoisePerf));
-                            //Setting time result
-                            runOnUiThread(new SetTextRunnable("Normal time: " + normTimeNoise + "s\nPerforated time: " + perfTimeNoise + "s"));
-                            runOnUiThread(new SetButtonRunnable(true));
-                            break;
                     }
                 }
             }).start();
@@ -318,12 +303,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         //  The delay is not added to run time for the test
         handlerNorm.postDelayed(new Runnable() {
             public void run() {
-                if (shadowNorm == 0)
-                    //First time we call test, we set first to true, so the increment values table is created in C
-                    normTime += brightness(bitmapNorm, (float) 0.1, false, true);
-                else
-                    //Then we call function for brightness 99 more times, every time we add the time needed for the run
-                    normTime += brightness(bitmapNorm, (float) 0.1, false, false);
+                normTime += brightness(bitmapNorm, (float) 0.1, false, firstBrightnessRun);
+                firstBrightnessRun = false;
                 //Every time we set image, so the users see the difference of every increment
                 imageView2.setImageBitmap(bitmapNorm);
                 shadowNorm = (float) (shadowNorm + 0.1);
@@ -345,16 +326,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         final Handler handler = new Handler(getMainLooper());
         handler.postDelayed(new Runnable() {
             public void run() {
-                if (shadowPerf == 0)
-                    perfTime += brightness(bitmap, (float) 0.1, true, true);
-                else
-                    perfTime += brightness(bitmap, (float) 0.1, true, false);
+                perfTime += brightness(bitmap, (float) 0.1, true, firstBrightnessRun);
                 imageView.setImageBitmap(bitmap);
                 shadowPerf = (float) (shadowPerf + 0.1);
                 if (shadowPerf < 10)
                     handler.postDelayed(this, 1);
-                else
+                else {
                     runOnUiThread(new SetTextRunnable(mTV.getText() + "\nPerforated: " + perfTime + "s"));
+                }
             }
         }, 100);
         perfTime = 0;
@@ -377,6 +356,4 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     public native double edgeDetection(Bitmap bitmapBase, Bitmap bitmapToChange, boolean perf);
     //For picture blur test
     public native double blur(Bitmap bmp, int radious, boolean perf);
-    //For noise reduction test
-    public native double removeNoise(Bitmap bmp, boolean perf);
 }

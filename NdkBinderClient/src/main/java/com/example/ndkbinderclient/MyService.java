@@ -52,7 +52,7 @@ public class MyService extends Service
         //Method for calculating perforation factor
         @Override
         public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
-            LoopPerfFactor t = new LoopPerfFactor(2, Integer.MAX_VALUE);
+            LoopPerfFactor t = new LoopPerfFactor(8, 6000000);
             return t;
         }
     }

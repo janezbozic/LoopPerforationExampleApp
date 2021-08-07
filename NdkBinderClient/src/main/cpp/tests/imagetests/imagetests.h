@@ -24,6 +24,4 @@ void stackblurJobPerforated(unsigned char* src,                ///< input image 
                   unsigned int radius               ///< blur intensity (should be in 2..254 range)
 );
 
-void removeNoise(AndroidBitmapInfo* info, void* pixels, float brightnessValue, bool perf);
-
 #endif //ANDROIDNDKBINDEREXAMPLES_IMAGETESTS_H

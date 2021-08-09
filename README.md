@@ -16,7 +16,7 @@ we have to use ndk, which uses [LLVM-Project](https://github.com/janezbozic/llvm
 
 ## Video demo of picture brightness:
 
-On the video dynamic loop perforation is demonstrated. The perforation factor is being changed dynamically, when method from the service is called with specific loopId number, which is unique for every translation of loop's source file (if we make changes to a source file, we have to change loopId, for which perforation factor changes). One is image, which is perforated, and the other is unperforated, but with lesser brightness factor (see table for the relation between perforation factor for perforated loop and brightness factor for unperforated loop)
+On the video dynamic loop perforation is demonstrated. The perforation factor is being changed dynamically, when method from the service is called with specific loopId number, which is unique for every translation of loop's source file (if we make changes to a source file, we have to change loopId, for which perforation factor changes). One is image, which is perforated, and the other is unperforated, but with lesser brightness factor (see table for the relation between perforation factor of perforated loop and brightness factor of unperforated loop)
 
 | Perforation factor for perforated image  | Smaller brightness factor for unperforated image |
 | ------------- | ------------- |

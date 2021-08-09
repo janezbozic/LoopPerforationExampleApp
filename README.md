@@ -18,5 +18,10 @@ we have to use ndk, which uses [LLVM-Project](https://github.com/janezbozic/llvm
 
 For code switch to brightnessChanges branch
 
-https://user-images.githubusercontent.com/33355095/128611085-4f3f8df1-d4e3-42d6-8ad3-4bd9d41d1fd8.mp4
+https://user-images.githubusercontent.com/33355095/128679963-01009d55-23bd-4280-b73a-cd0b735d82a0.mp4
 
+| Perforation factor for perforated image  | Smaller brightness factor for unperforated image |
+| ------------- | ------------- |
+| 2  | 40%  |
+| 3  | 75%  |
+| 4  | 85%  |

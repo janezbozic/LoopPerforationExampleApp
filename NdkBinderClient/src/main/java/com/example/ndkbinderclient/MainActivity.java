@@ -36,8 +36,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private Button runButton;
 
     private ImageView imageView;
+    private ImageView imageView2;
     private Bitmap original;
-    private boolean firstBrightnessRun;
 
     Spinner spinner;
 
@@ -53,9 +53,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         runButton = findViewById(R.id.runButton);
 
         spinner = findViewById(R.id.spinner);
-        firstBrightnessRun = true;
 
-        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280"};
+        String [] options = {"Picture Brightness 640x427", "Picture Brightness 1920x1280"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_spinner_item, options);
@@ -95,23 +94,13 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     runOnUiThread(new SetTextRunnable("Running test..."));
 
                     switch (test){
-                        //Run Black-Scholes
-                        case 0:
-                            runOnUiThread(new SetTextRunnable(talkToService(1)));
-                            runOnUiThread(new SetButtonRunnable(true));
-                        break;
-                        //Run Monte-Carlo
-                        case 1:
-                            runOnUiThread(new SetTextRunnable(talkToService(2)));
-                            runOnUiThread(new SetButtonRunnable(true));
-                        break;
                         //Running picture brightness test with lower resolution picture
-                        case 2:
+                        case 0:
                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
                             adjustBrightness();
                         break;
                         //Running picture brightness test with higher resolution picture
-                        case 3:
+                        case 1:
                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
                             adjustBrightness();
                         break;
@@ -121,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         });
 
         imageView = (ImageView) findViewById(R.id.imageView);
+        imageView2 = (ImageView) findViewById(R.id.imageView2);
 
     }
 
@@ -197,85 +187,63 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }
     }
 
-    //Set button enabled/disabled on UI Thread
-    private class SetButtonRunnable implements Runnable
-    {
-        final boolean buttonEnabled;
-
-        SetButtonRunnable(boolean b)
-        {
-            buttonEnabled = b;
-        }
-
-        @Override
-        public void run()
-        {
-            runButton.setEnabled(buttonEnabled);
-        }
-    }
-
-    //Setting image on UI Thread
-    private class SetImageView implements Runnable
-    {
-        final Bitmap image;
-
-        SetImageView(Bitmap b)
-        {
-            image = b;
-        }
-
-        @Override
-        public void run()
-        {
-            imageView.setImageBitmap(image);
-        }
-    }
-
-    float shadowPerf = (float) 0.0;
     double perfTime = 0;
-    Bitmap bitmap;
+    double normTime = 0;
+    Bitmap bitmap, normBitmap;
     int countPerf = 0;
-    double dtime = 0;
+    int countNorm = 0;
+
+    float brightness [] = {6, (float)2.5, (float)1.5};
 
     //Main method for picture brightness test
     private void adjustBrightness() {
 
         bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+        normBitmap = original.copy(Bitmap.Config.ARGB_8888, true);
 
-        //We do the exact thing for perforated function
+        //Unperforated images with brightness factors specific for every run.
+        final Handler handlerNorm = new Handler(getMainLooper());
+        handlerNorm.postDelayed(new Runnable() {
+            public void run() {
+                normTime += brightness(normBitmap, brightness[countNorm], false);
+                imageView2.setImageBitmap(normBitmap);
+                if (countNorm < 2) {
+                    handlerNorm.postDelayed(this, 3000);
+                    normBitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+                    countNorm++;
+                }
+                else {
+                    normBitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+                    runButton.setEnabled(true);
+                    mTV.setText(mTV.getText() + "\nNormal time: " + normTime+"s");
+                    normTime = 0;
+                    countNorm = 0;
+                }
+            }
+        }, 1000);
+
+        //Perforated images with brightness 100% and changing perforation factor from the service
         //  Perforated function means, that main loop has #pragma clang loop perforate (enable)
         final Handler handler = new Handler(getMainLooper());
         handler.postDelayed(new Runnable() {
             public void run() {
-                dtime += brightness(bitmap, (float) 0.1, true, firstBrightnessRun);
-                firstBrightnessRun = false;
+                perfTime += brightness(bitmap, 10, true);
                 imageView.setImageBitmap(bitmap);
-                shadowPerf = (float) (shadowPerf + 0.1);
-                if (shadowPerf < 10)
-                    handler.postDelayed(this, 1);
+                if (countPerf < 2) {
+                    handlerNorm.postDelayed(this, 3000);
+                    bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+                    countPerf++;
+                }
                 else {
-                    shadowPerf = 0;
+                    bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
+                    runButton.setEnabled(true);
+                    mTV.setText(mTV.getText() + "\nPerforated time: " + perfTime+"s");
+                    mTV.setText(mTV.getText() + "\nEnd of picture brightness demo");
                     perfTime = 0;
-                    if (countPerf < 5) {
-                        handler.postDelayed(this, 12000);
-                        perfTime+=dtime;
-                        mTV.setText(mTV.getText() + "\nRun: " + (countPerf+1) + "   time: " + dtime+"s");
-                        dtime = 0;
-                        bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
-                        countPerf++;
-                    }
-                    else {
-                        bitmap = original.copy(Bitmap.Config.ARGB_8888, true);
-                        runButton.setEnabled(true);
-                        mTV.setText(mTV.getText() + "\nRun: " + (countPerf+1) + "   time: " + dtime+"s");
-                        mTV.setText(mTV.getText() + "\nEnd of picture brightness demo");
-                        countPerf = 0;
-                    }
+                    countPerf = 0;
                 }
             }
-        }, 100);
-        perfTime = 0;
-        shadowPerf = 0;
+        }, 1000);
     }
 
     /**
@@ -286,12 +254,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     public native void onServiceConnected(IBinder binder);
     //For service disconnection
     public native void onServiceDisconnected();
-    //For tests Black-Scholes and Monte-Carlo
-    public native String talkToService(int numOfRuns);
     //For picture brightness test
-    public native double brightness(Bitmap bmp, float brightness, boolean perf, boolean first);
-    //For edge detection test
-    public native double edgeDetection(Bitmap bitmapBase, Bitmap bitmapToChange, boolean perf);
-    //For picture blur test
-    public native double blur(Bitmap bmp, int radious, boolean perf);
+    public native double brightness(Bitmap bmp, float brightness, boolean perf);
 }

@@ -52,22 +52,22 @@ public class MyService extends Service
             Log.d(Constants.LOG_TAG, str.toString());
         }
 
-        int perforationFactor = 0;
+        int perforationFactor = 1;
 
         //Method for calculating perforation factor
         @Override
         public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
-            if (loopId == 105440720) //Specific for the build
+            if (loopId == 118025552) { //Specific for the build
                 perforationFactor++;
-            LoopPerfFactor t = new LoopPerfFactor(perforationFactor, 12000000);
-            Handler handler = new Handler(Looper.getMainLooper());
-            handler.post(new Runnable() {
-
-                @Override
-                public void run() {
-                    Toast.makeText(getBaseContext(),"Perforation factor is: " + perforationFactor,Toast.LENGTH_SHORT).show();
-                }
-            });
+                Handler handler = new Handler(Looper.getMainLooper());
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getBaseContext(),"Perforation factor is: " + perforationFactor,Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+            LoopPerfFactor t = new LoopPerfFactor(perforationFactor, 1000);
             return t;
         }
     }

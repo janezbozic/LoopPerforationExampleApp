@@ -8,8 +8,6 @@ add_library (
         perforation/LoopInfo.cpp
         perforation/perforation_lib.cpp
         tests/imagetests/imagetests.cpp
-        tests/montecarlo/montecarlo.cpp
-        tests/blackscholes/blackScholes.cpp
         ${aidl_src_dir}/com/example/IMyService.cpp
         native-lib.cpp
 )

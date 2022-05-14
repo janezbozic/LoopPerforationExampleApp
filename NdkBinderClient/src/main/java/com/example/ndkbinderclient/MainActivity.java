@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -21,6 +22,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.Constants;
+import com.example.IMyService;
+
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection
 {
@@ -34,11 +38,14 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private final ConditionVariable mServiceConnectionWaitLock = new ConditionVariable();
     private TextView mTV = null;
     private Button runButton;
+    private Button calibrateButton;
 
     private ImageView imageView;
     private ImageView imageView2;
     private Bitmap original;
     private boolean firstBrightnessRun;
+
+    IMyService service;
 
     Spinner spinner;
 
@@ -52,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         mTV = findViewById(R.id.sample_text);
         runButton = findViewById(R.id.runButton);
+        calibrateButton = findViewById(R.id.calibrateButton);
 
         spinner = findViewById(R.id.spinner);
         firstBrightnessRun = true;
@@ -73,6 +81,115 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             public void onNothingSelected(AdapterView<?> parent) {
                 test = 0;
             }
+        });
+
+        calibrateButton.setOnClickListener(v -> {
+            runButton.setEnabled(false);
+            calibrateButton.setEnabled(false);
+            imageView.setImageBitmap(null);
+            imageView2.setImageBitmap(null);
+
+            new Thread(new Runnable()
+            {
+                //Running test n on separate thread
+                @Override
+                public void run()
+                {
+                    runOnUiThread(new SetTextRunnable("Waiting to talk to Perforation service..."));
+
+                    // Waiting for perforation service connection
+                    while(!mIsServiceConnected)
+                    {
+                        mServiceConnectionWaitLock.block(); // waits for service connection
+                    }
+
+                    try {
+                        service.startCalibrationMode();
+                        boolean calibrated = false;
+
+                        runOnUiThread(new SetTextRunnable("Calibrating loops..."));
+
+                        while (!calibrated) {
+
+                            ResultInfo tempRes = talkToService(2);
+
+                            runOnUiThread(new SetTextRunnable(tempRes.getResult() + ""));
+
+                            calibrated = service.midTestResult(tempRes.getResult(), tempRes.getTime());
+
+                            TimeUnit.SECONDS.sleep(1);
+
+                            /** switch (test){
+                             //Run Black-Scholes
+                             case 0:
+                             runOnUiThread(new SetTextRunnable(talkToService(1)));
+                             runOnUiThread(new SetButtonRunnable(true));
+                             break;
+                             //Run Monte-Carlo
+                             case 1:
+                             runOnUiThread(new SetTextRunnable(talkToService(2)));
+                             runOnUiThread(new SetButtonRunnable(true));
+                             break;
+                             //Running picture brightness test with lower resolution picture
+                             case 2:
+                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
+                             adjustBrightness();
+                             break;
+                             //Running picture brightness test with higher resolution picture
+                             case 3:
+                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                             adjustBrightness();
+                             break;
+                             //Running edge detection test
+                             case 4:
+                             //Setting base bitmap
+                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                             //Setting working copy and reference
+                             Bitmap bitmapBase = original.copy(Bitmap.Config.ARGB_8888, true);
+                             Bitmap bitmapToChange2 = original.copy(Bitmap.Config.ARGB_8888, true);
+                             //Running non-perforated
+                             double normTime = edgeDetection(bitmapBase, bitmapToChange2, false);
+                             //Setting image on UI thread
+                             runOnUiThread(new SetImageView2(bitmapToChange2));
+                             //Setting new working copy
+                             Bitmap bitmapToChange = original.copy(Bitmap.Config.ARGB_8888, true);
+                             //Running perforated test
+                             double perfTime = edgeDetection(bitmapBase, bitmapToChange, true);
+                             //Setting perforated image
+                             runOnUiThread(new SetImageView(bitmapToChange));
+                             //Setting time result
+                             runOnUiThread(new SetTextRunnable("Normal time: " + normTime + "s\nPerforated time: " + perfTime + "s"));
+                             runOnUiThread(new SetButtonRunnable(true));
+                             break;
+                             case 5:
+                             //Setting base bitmap
+                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                             //Setting working copy
+                             Bitmap bitmapBlur = original.copy(Bitmap.Config.ARGB_8888, true);
+                             double normTimeBlur = blur(bitmapBlur, 120, false);
+                             //Setting image on UI thread
+                             runOnUiThread(new SetImageView(bitmapBlur));
+                             //Setting working copy
+                             Bitmap bitmapBlurPerf = original.copy(Bitmap.Config.ARGB_8888, true);
+                             double perfTimeBlur = blur(bitmapBlurPerf, 120, true);
+                             //Setting perforated image
+                             runOnUiThread(new SetImageView2(bitmapBlurPerf));
+                             //Setting time result
+                             runOnUiThread(new SetTextRunnable("Normal time: " + normTimeBlur + "s\nPerforated time: " + perfTimeBlur + "s"));
+                             runOnUiThread(new SetButtonRunnable(true));
+                             break;
+                             }
+                             **/
+                        }
+                        service.endCalibrationMode();
+                    } catch (RemoteException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    runOnUiThread(new SetButtonRunnable(true));
+                }
+            }).start();
+
         });
 
         runButton.setOnClickListener((v)->{
@@ -99,12 +216,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     switch (test){
                         //Run Black-Scholes
                         case 0:
-                            runOnUiThread(new SetTextRunnable(talkToService(1)));
+                            runOnUiThread(new SetTextRunnable(talkToService(1).getResult() + ""));
                             runOnUiThread(new SetButtonRunnable(true));
                         break;
                         //Run Monte-Carlo
                         case 1:
-                            runOnUiThread(new SetTextRunnable(talkToService(2)));
+                            runOnUiThread(new SetTextRunnable(talkToService(2).getResult() + ""));
                             runOnUiThread(new SetButtonRunnable(true));
                         break;
                         //Running picture brightness test with lower resolution picture
@@ -204,6 +321,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         //Call to native function for connecting to the service
         onServiceConnected(iBinder);
+        service = IMyService.Stub.asInterface(iBinder);
 
         mIsServiceConnected = true;
 
@@ -217,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         //Call to native function for disconnecting from the service
         onServiceDisconnected();
+        service = null;
 
         Log.d(Constants.LOG_TAG, "[App] [java] onServiceDisconnected");
     }
@@ -252,6 +371,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         public void run()
         {
             runButton.setEnabled(buttonEnabled);
+            calibrateButton.setEnabled(buttonEnabled);
         }
     }
 
@@ -349,7 +469,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     //For service disconnection
     public native void onServiceDisconnected();
     //For tests Black-Scholes and Monte-Carlo
-    public native String talkToService(int numOfRuns);
+    public native ResultInfo talkToService(int testId);
     //For picture brightness test
     public native double brightness(Bitmap bmp, float brightness, boolean perf, boolean first);
     //For edge detection test

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-extern "C" JNIEXPORT jstring JNICALL
+extern "C" JNIEXPORT jobject JNICALL
 Java_com_example_ndkbinderclient_MainActivity_talkToService(
         JNIEnv* env,
         jobject /* this */,
@@ -70,10 +70,15 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
         allRunsNorm /= NUM_REP;
 
         //Setting return the result of the test
-        returnResult = "Average of " + std::to_string(NUM_REP) + " tests of 1000 runs of test's main loop:" +
+        /*returnResult = "Average of " + std::to_string(NUM_REP) + " tests of 1000 runs of test's main loop:" +
                        "\n\tNormal: " + std::to_string(normTime) + "s All runs: " +
                        std::to_string(allRunsNorm) + "\n\tPerforated: " +
                        std::to_string(perfTime) + "s All runs: " + std::to_string(allRunsPerf);
+                       */
+        jclass cls = (*env).FindClass("com/example/ndkbinderclient/ResultInfo");
+        jmethodID midConstructor = (*env).GetMethodID(cls, "<init>", "(DD)V");
+        jobject resultInfoObj = (*env).NewObject(cls, midConstructor, perfTime, allRunsPerf*1.0);
+        return resultInfoObj;
     }
     //Running test Monte-Carlo
     else if (testid == 2){
@@ -119,6 +124,11 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
                        "\n\tNormal: " + std::to_string(normTime) + "s\n\tPerforated: " +
                        std::to_string(perfTime) + "s\n\tAvg. Difference: " + std::to_string(diffPercent) + "%" +
                        "\n\tDifference value: " + std::to_string(abs(normalRuns - perforatedRuns));
+
+        jclass cls = (*env).FindClass("com/example/ndkbinderclient/ResultInfo");
+        jmethodID midConstructor = (*env).GetMethodID(cls, "<init>", "(DD)V");
+        jobject resultInfoObj = (*env).NewObject(cls, midConstructor, perfTime, perforatedRuns);
+        return resultInfoObj;
     }
 
     //Returning result

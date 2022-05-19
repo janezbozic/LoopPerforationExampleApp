@@ -45,7 +45,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     private Bitmap original;
     private boolean firstBrightnessRun;
 
-    IMyService service;
+    PerforationHelper perforationHelper;
+
 
     Spinner spinner;
 
@@ -56,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        perforationHelper = new PerforationHelper();
 
         mTV = findViewById(R.id.sample_text);
         runButton = findViewById(R.id.runButton);
@@ -104,84 +107,33 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     }
 
                     try {
-                        service.startCalibrationMode();
+                        perforationHelper.startCalibrationMode();
                         boolean calibrated = false;
 
                         runOnUiThread(new SetTextRunnable("Calibrating loops..."));
 
                         while (!calibrated) {
-
+                            /*
                             ResultInfo tempRes = talkToService(2);
-
                             runOnUiThread(new SetTextRunnable(tempRes.getResult() + ""));
-
                             calibrated = service.midTestResult(tempRes.getResult(), tempRes.getTime());
+                            TimeUnit.SECONDS.sleep(1);
+                            */
 
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                            //Setting working copy and reference
+                            Bitmap bitmapBase = original.copy(Bitmap.Config.ARGB_8888, true);
+                            Bitmap bitmapToChange = original.copy(Bitmap.Config.ARGB_8888, true);
+                            double perfTime = edgeDetection(bitmapBase, bitmapToChange, true);
+                            //Setting perforated image
+                            runOnUiThread(new SetImageView(bitmapToChange));
+                            //Setting time result
+                            runOnUiThread(new SetTextRunnable("Perforated time: " + perfTime + "s"));
+                            calibrated = perforationHelper.midTestResult(bitmapToChange, perfTime);
                             TimeUnit.SECONDS.sleep(1);
 
-                            /** switch (test){
-                             //Run Black-Scholes
-                             case 0:
-                             runOnUiThread(new SetTextRunnable(talkToService(1)));
-                             runOnUiThread(new SetButtonRunnable(true));
-                             break;
-                             //Run Monte-Carlo
-                             case 1:
-                             runOnUiThread(new SetTextRunnable(talkToService(2)));
-                             runOnUiThread(new SetButtonRunnable(true));
-                             break;
-                             //Running picture brightness test with lower resolution picture
-                             case 2:
-                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
-                             adjustBrightness();
-                             break;
-                             //Running picture brightness test with higher resolution picture
-                             case 3:
-                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                             adjustBrightness();
-                             break;
-                             //Running edge detection test
-                             case 4:
-                             //Setting base bitmap
-                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                             //Setting working copy and reference
-                             Bitmap bitmapBase = original.copy(Bitmap.Config.ARGB_8888, true);
-                             Bitmap bitmapToChange2 = original.copy(Bitmap.Config.ARGB_8888, true);
-                             //Running non-perforated
-                             double normTime = edgeDetection(bitmapBase, bitmapToChange2, false);
-                             //Setting image on UI thread
-                             runOnUiThread(new SetImageView2(bitmapToChange2));
-                             //Setting new working copy
-                             Bitmap bitmapToChange = original.copy(Bitmap.Config.ARGB_8888, true);
-                             //Running perforated test
-                             double perfTime = edgeDetection(bitmapBase, bitmapToChange, true);
-                             //Setting perforated image
-                             runOnUiThread(new SetImageView(bitmapToChange));
-                             //Setting time result
-                             runOnUiThread(new SetTextRunnable("Normal time: " + normTime + "s\nPerforated time: " + perfTime + "s"));
-                             runOnUiThread(new SetButtonRunnable(true));
-                             break;
-                             case 5:
-                             //Setting base bitmap
-                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                             //Setting working copy
-                             Bitmap bitmapBlur = original.copy(Bitmap.Config.ARGB_8888, true);
-                             double normTimeBlur = blur(bitmapBlur, 120, false);
-                             //Setting image on UI thread
-                             runOnUiThread(new SetImageView(bitmapBlur));
-                             //Setting working copy
-                             Bitmap bitmapBlurPerf = original.copy(Bitmap.Config.ARGB_8888, true);
-                             double perfTimeBlur = blur(bitmapBlurPerf, 120, true);
-                             //Setting perforated image
-                             runOnUiThread(new SetImageView2(bitmapBlurPerf));
-                             //Setting time result
-                             runOnUiThread(new SetTextRunnable("Normal time: " + normTimeBlur + "s\nPerforated time: " + perfTimeBlur + "s"));
-                             runOnUiThread(new SetButtonRunnable(true));
-                             break;
-                             }
-                             **/
                         }
-                        service.endCalibrationMode();
+                        perforationHelper.endCalibrationMode();
                     } catch (RemoteException | InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -309,6 +261,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         //Call to native function to disconnect from service
         onServiceDisconnected();
 
+        perforationHelper.disconnectService();
+
         Log.d(Constants.LOG_TAG, "[App] [java] unbindService");
 
         super.onPause();
@@ -321,7 +275,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         //Call to native function for connecting to the service
         onServiceConnected(iBinder);
-        service = IMyService.Stub.asInterface(iBinder);
+
+        perforationHelper.connectService(iBinder);
 
         mIsServiceConnected = true;
 
@@ -335,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
         //Call to native function for disconnecting from the service
         onServiceDisconnected();
-        service = null;
+        perforationHelper.disconnectService();
 
         Log.d(Constants.LOG_TAG, "[App] [java] onServiceDisconnected");
     }

@@ -107,9 +107,7 @@ public class MyService extends Service
                 return false;
             }
 
-            double curAccuracy = abs(result-perfectResult) / perfectResult;
-
-            if (curAccuracy > 0.001){
+            if (result < 0.3){
                 int maxElementIdx = currentRates.entrySet().stream().max((entry1, entry2) -> entry1.getValue().perfFactor >= entry2.getValue().getPerfFactor() ? 1 : -1)
                         .get().getKey();
                 if (Math.random() > 0.6){
@@ -120,13 +118,13 @@ public class MyService extends Service
                 if (tempInt == 0)
                     tempInt = 1;
                 double curRand = Math.random();
-                if (!(curAccuracy >= prevResult && curRand > simAnealFactor || curAccuracy < prevResult && curRand <= simAnealFactor)){
+                if (!(result >= prevResult && curRand > simAnealFactor || result < prevResult && curRand <= simAnealFactor)){
                     LoopPerfFactor temp = new LoopPerfFactor(prevValue, 1000000);
                     currentRates.replace(prevIndex, temp);
                 }
                 prevIndex = maxElementIdx;
                 prevValue = maxElement.perfFactor;
-                prevResult = curAccuracy;
+                prevResult = result;
                 LoopPerfFactor temp = new LoopPerfFactor(tempInt, maxElement.factorLife);
                 currentRates.replace(maxElementIdx, temp);
                 simAnealFactor -= 0.5/CUTOFF;

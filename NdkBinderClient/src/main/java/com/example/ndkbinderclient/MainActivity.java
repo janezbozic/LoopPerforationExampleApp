@@ -112,25 +112,93 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
                         runOnUiThread(new SetTextRunnable("Calibrating loops..."));
 
-                        while (!calibrated) {
-                            /*
-                            ResultInfo tempRes = talkToService(2);
-                            runOnUiThread(new SetTextRunnable(tempRes.getResult() + ""));
-                            calibrated = service.midTestResult(tempRes.getResult(), tempRes.getTime());
-                            TimeUnit.SECONDS.sleep(1);
-                            */
+                        boolean first = true;
 
-                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                            //Setting working copy and reference
-                            Bitmap bitmapBase = original.copy(Bitmap.Config.ARGB_8888, true);
-                            Bitmap bitmapToChange = original.copy(Bitmap.Config.ARGB_8888, true);
-                            double perfTime = edgeDetection(bitmapBase, bitmapToChange, true);
-                            //Setting perforated image
-                            runOnUiThread(new SetImageView(bitmapToChange));
-                            //Setting time result
-                            runOnUiThread(new SetTextRunnable("Perforated time: " + perfTime + "s"));
-                            calibrated = perforationHelper.midTestResult(bitmapToChange, perfTime);
-                            TimeUnit.SECONDS.sleep(1);
+                        while (!calibrated) {
+                            switch (test) {
+                                case 0:
+                                    ResultInfo tempRes1 = talkToService(1);
+                                    runOnUiThread(new SetTextRunnable(tempRes1.getResult() + ""));
+                                    calibrated = perforationHelper.midTestResult(tempRes1.getResult(), tempRes1.getTime());
+                                    TimeUnit.SECONDS.sleep(1);
+                                    break;
+
+                                case 1:
+                                    ResultInfo tempRes2 = talkToService(2);
+                                    runOnUiThread(new SetTextRunnable(tempRes2.getResult() + ""));
+                                    calibrated = perforationHelper.midTestResult(tempRes2.getResult(), tempRes2.getTime());
+                                    TimeUnit.SECONDS.sleep(1);
+                                    break;
+
+                                case 2:
+                                    original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
+                                    Bitmap bitmap1 = original.copy(Bitmap.Config.ARGB_8888, true);
+                                    perfTime = 0;
+                                    if (first) {
+                                        perfTime = brightness(bitmap1, (float) 1, true, firstBrightnessRun) * 10;
+                                        first = false;
+                                    }
+                                    else {
+                                        for (int i = 0; i<10; i++)
+                                            perfTime += brightness(bitmap1, (float) 0.1, true, firstBrightnessRun);
+                                    }
+                                    runOnUiThread(new SetImageView(bitmap1));
+                                    firstBrightnessRun = false;
+                                    calibrated = perforationHelper.midTestResult(bitmap1, perfTime);
+                                    runOnUiThread(new SetTextRunnable(perfTime + "s"));
+                                    perfTime = 0;
+                                    TimeUnit.SECONDS.sleep(1);
+                                    break;
+
+                                case 3:
+                                    original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                                    Bitmap bitmap2 = adjustBrightness();
+                                    perfTime = 0;
+                                    if (first) {
+                                        perfTime = brightness(bitmap2, (float) 1, true, firstBrightnessRun) * 10;
+                                        first = false;
+                                    }
+                                    else {
+                                        for (int i = 0; i<10; i++)
+                                            perfTime += brightness(bitmap2, (float) 0.1, true, firstBrightnessRun);
+                                    }
+                                    runOnUiThread(new SetImageView(bitmap2));
+                                    firstBrightnessRun = false;
+                                    calibrated = perforationHelper.midTestResult(bitmap2, perfTime);
+                                    runOnUiThread(new SetTextRunnable(perfTime + "s"));
+                                    perfTime = 0;
+                                    TimeUnit.SECONDS.sleep(1);
+                                    break;
+
+                                case 4:
+                                    original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                                    //Setting working copy and reference
+                                    Bitmap bitmapBase = original.copy(Bitmap.Config.ARGB_8888, true);
+                                    Bitmap bitmapToChange = original.copy(Bitmap.Config.ARGB_8888, true);
+                                    double perfTime = edgeDetection(bitmapBase, bitmapToChange, true);
+                                    //Setting perforated image
+                                    runOnUiThread(new SetImageView(bitmapToChange));
+                                    //Setting time result
+                                    runOnUiThread(new SetTextRunnable("Perforated time: " + perfTime + "s"));
+                                    calibrated = perforationHelper.midTestResult(bitmapToChange, perfTime);
+                                    TimeUnit.SECONDS.sleep(1);
+                                    break;
+
+                                case 5:
+                                    //Setting base bitmap
+                                    original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
+                                    //Setting working copy
+                                    Bitmap bitmapBlurPerf = original.copy(Bitmap.Config.ARGB_8888, true);
+                                    double perfTimeBlur = blur(bitmapBlurPerf, 120, true);
+                                    //Setting perforated image
+                                    runOnUiThread(new SetImageView2(bitmapBlurPerf));
+                                    //Setting time result
+                                    runOnUiThread(new SetTextRunnable("Perforated time: " + perfTimeBlur + "s"));
+                                    calibrated = perforationHelper.midTestResult(bitmapBlurPerf, perfTimeBlur);
+                                    TimeUnit.SECONDS.sleep(1);
+                                    break;
+
+                            }
 
                         }
                         perforationHelper.endCalibrationMode();
@@ -139,6 +207,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     }
 
                     runOnUiThread(new SetButtonRunnable(true));
+                    runOnUiThread(new SetTextRunnable("Calibrated for test."));
                 }
             }).start();
 
@@ -371,7 +440,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     double perfTime = 0;
 
     //Main method for picture brightness test
-    private void adjustBrightness() {
+    private Bitmap adjustBrightness() {
         Bitmap bitmapNorm = original.copy(Bitmap.Config.ARGB_8888, true);
         final Handler handlerNorm = new Handler(getMainLooper());
         //We create handler and post picture for every increment in brightness, so the users see progress
@@ -413,6 +482,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }, 100);
         perfTime = 0;
         shadowPerf = 0;
+
+        return bitmap;
     }
 
     /**

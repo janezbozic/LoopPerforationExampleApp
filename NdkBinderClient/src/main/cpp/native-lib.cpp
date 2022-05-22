@@ -33,27 +33,16 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
 
         int NUM_REP = 100;
 
+        double sum_res = 0;
+
         for (int i = 0; i < NUM_REP; i++) {
 
             //Getting start time
             auto start = chrono::steady_clock::now();
-            //Running non-perforated test
-            startBalckScholes(false);
+            //Running perforated test
+            sum_res += startBalckScholes(true);
             //Getting end time
             auto end = chrono::steady_clock::now();
-            //Adding execution time to sum of non-perforated runs
-            normTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
-            //Number of test's main loop execution
-            allRunsNorm += getNewCount();
-            //Set counter of execution to 0
-            resetNewCount();
-
-            //Getting start time
-            start = chrono::steady_clock::now();
-            //Running perforated test
-            startBalckScholes(true);
-            //Getting end time
-            end = chrono::steady_clock::now();
             //Adding execution time to sum of perforated runs
             perfTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
             //Number of test's main loop execution
@@ -63,21 +52,13 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
 
         }
 
-        normTime /= NUM_REP;
         perfTime /= NUM_REP;
-
+        sum_res /= NUM_REP;
         allRunsPerf /= NUM_REP;
-        allRunsNorm /= NUM_REP;
 
-        //Setting return the result of the test
-        /*returnResult = "Average of " + std::to_string(NUM_REP) + " tests of 1000 runs of test's main loop:" +
-                       "\n\tNormal: " + std::to_string(normTime) + "s All runs: " +
-                       std::to_string(allRunsNorm) + "\n\tPerforated: " +
-                       std::to_string(perfTime) + "s All runs: " + std::to_string(allRunsPerf);
-                       */
         jclass cls = (*env).FindClass("com/example/ndkbinderclient/ResultInfo");
         jmethodID midConstructor = (*env).GetMethodID(cls, "<init>", "(DD)V");
-        jobject resultInfoObj = (*env).NewObject(cls, midConstructor, perfTime, allRunsPerf*1.0);
+        jobject resultInfoObj = (*env).NewObject(cls, midConstructor, perfTime, sum_res);
         return resultInfoObj;
     }
     //Running test Monte-Carlo

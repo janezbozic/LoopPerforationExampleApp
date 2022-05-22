@@ -202,7 +202,7 @@ int getNewCount(){
     return newcount;
 }
 
-int bs_thread(void *tid_ptr, bool perf) {
+double bs_thread(void *tid_ptr, bool perf) {
     int i, j;
     fptype price;
     fptype priceDelta;
@@ -244,11 +244,17 @@ int bs_thread(void *tid_ptr, bool perf) {
         }
     }
 
-    return 0;
+
+    double sum_prices = 0;
+    for (int i = 0; i<4; i++){
+        sum_prices += prices[i];
+    }
+
+    return sum_prices;
 }
 
 //Test's main function
-int startBalckScholes (bool perf)
+double startBalckScholes (bool perf)
 {
 
     FILE *file;
@@ -334,7 +340,7 @@ int startBalckScholes (bool perf)
 
     //serial version
     int tid=0;
-    bs_thread(&tid, perf);
+    double result = bs_thread(&tid, perf);
 
     free(dataL);
     free(prices);
@@ -342,5 +348,5 @@ int startBalckScholes (bool perf)
     free(buffer);
     free(buffer2);
 
-    return 0;
+    return result;
 }

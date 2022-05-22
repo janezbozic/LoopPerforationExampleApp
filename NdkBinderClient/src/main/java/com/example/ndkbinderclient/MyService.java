@@ -107,7 +107,7 @@ public class MyService extends Service
                 return false;
             }
 
-            if (result < 0.3){
+            if (result < 0.9 || result > 1.1){
                 int maxElementIdx = currentRates.entrySet().stream().max((entry1, entry2) -> entry1.getValue().perfFactor >= entry2.getValue().getPerfFactor() ? 1 : -1)
                         .get().getKey();
                 if (Math.random() > 0.6){

@@ -75,12 +75,12 @@ public class PerforationHelper {
         Utils.bitmapToMat(image2, changedImage);
         Scalar similarity = calculateSSIM(originalImage, changedImage);
         Log.d("SSIM_Debug", similarity.toString());
-        double sim = Math.sqrt(
-                Math.pow(similarity.val[0], 2) +
-                        Math.pow(similarity.val[0], 2) +
-                        Math.pow(similarity.val[0], 2) +
-                        Math.pow(similarity.val[0], 2)
-        );
+        double sim = (
+                similarity.val[0] +
+                similarity.val[1] +
+                similarity.val[2] +
+                similarity.val[3]
+                ) / 4.0;
 
         return sim;
     }

@@ -111,6 +111,11 @@ public class MyService extends Service
         }
 
         @Override
+        public void setTestCalibration(int testId) throws RemoteException {
+            this.testId = testId;
+        }
+
+        @Override
         public boolean midTestResult(double result, double time) throws RemoteException {
             if (iter == CUTOFF)
                 return true;

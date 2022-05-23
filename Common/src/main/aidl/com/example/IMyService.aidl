@@ -19,6 +19,8 @@ interface IMyService {
 
     void setTest(int testId, int testAcc);
 
+    void setTestCalibration(int testId);
+
     boolean midTestResult(double result, double time);
 
     AllPerforations endCalibrationMode();

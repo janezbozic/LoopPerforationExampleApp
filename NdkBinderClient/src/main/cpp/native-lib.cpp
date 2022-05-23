@@ -15,7 +15,8 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_com_example_ndkbinderclient_MainActivity_talkToService(
         JNIEnv* env,
         jobject /* this */,
-        jint testid)
+        jint testid,
+        jboolean perf)
 {
 
     double perfTime = 0;
@@ -40,7 +41,7 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
             //Getting start time
             auto start = chrono::steady_clock::now();
             //Running perforated test
-            sum_res += startBalckScholes(true);
+            sum_res += startBalckScholes(perf);
             //Getting end time
             auto end = chrono::steady_clock::now();
             //Adding execution time to sum of perforated runs
@@ -65,7 +66,6 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
     else if (testid == 2){
 
         double perforatedRuns = 0;
-        double normalRuns = 0;
 
         int NUM_REP = 100;
 
@@ -73,38 +73,17 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
 
             //Getting start time
             auto start = chrono::steady_clock::now();
-            //Running non-perforated test
-            normalRuns += runMonteCarlo(false);
+            //Running perforated test
+            perforatedRuns += runMonteCarlo(perf);
             //Getting end time
             auto end = chrono::steady_clock::now();
-            //Adding execution time to sum of non-perforated runs
-            normTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
-
-            //Getting start time
-            start = chrono::steady_clock::now();
-            //Running perforated test
-            perforatedRuns += runMonteCarlo(true);
-            //Getting end time
-            end = chrono::steady_clock::now();
             //Adding execution time to sum of non-perforated runs
             perfTime += ((double)chrono::duration_cast<chrono::microseconds>(end - start).count())/1000000;
 
         }
 
-        //Calculating avg. percent of difference in the results
-        double diffPercent = (abs(normalRuns - perforatedRuns)/normalRuns)*100;
-
-        normTime /= NUM_REP;
         perfTime /= NUM_REP;
-
         perforatedRuns /= NUM_REP;
-        normalRuns /= NUM_REP;
-
-        //Setting return the result of the test
-        returnResult = "Average of " + std::to_string(NUM_REP) + " tests of 128*(4^5) runs of test's main loop:" +
-                       "\n\tNormal: " + std::to_string(normTime) + "s\n\tPerforated: " +
-                       std::to_string(perfTime) + "s\n\tAvg. Difference: " + std::to_string(diffPercent) + "%" +
-                       "\n\tDifference value: " + std::to_string(abs(normalRuns - perforatedRuns));
 
         jclass cls = (*env).FindClass("com/example/ndkbinderclient/ResultInfo");
         jmethodID midConstructor = (*env).GetMethodID(cls, "<init>", "(DD)V");

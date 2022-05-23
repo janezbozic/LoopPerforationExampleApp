@@ -21,9 +21,12 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.AllPerforations;
 import com.example.Constants;
 import com.example.IMyService;
 
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements ServiceConnection
@@ -47,9 +50,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
     PerforationHelper perforationHelper;
 
+    HashMap<Integer, AllPerforations> perforations = new HashMap<>();
 
     Spinner spinner;
+    Spinner spinnerResults;
 
+    int testAcc;
     int test = 0;
 
     @Override
@@ -65,9 +71,10 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         calibrateButton = findViewById(R.id.calibrateButton);
 
         spinner = findViewById(R.id.spinner);
+        spinnerResults = findViewById(R.id.spinnerResults);
         firstBrightnessRun = true;
 
-        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness 640x427", "Picture Brightness 1920x1280", "Edge Detection", "Blur Filter"};
+        String [] options = {"Black-Scholes", "Monte-Carlo", "Picture Brightness Normal", "Picture Brightness Perforated", "Edge Detection", "Blur Filter"};
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_spinner_item, options);
@@ -78,6 +85,18 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 test = position;
+                switch (test) {
+                    case 0:
+                    case 1:
+                        setTest(test);
+                        break;
+                    case 3:
+                        setTest(2);
+                        break;
+                    default:
+                        setTest(-1);
+                        break;
+                }
             }
 
             @Override
@@ -136,14 +155,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                     perfTime = 0;
                                     if (first) {
                                         perfTime = brightness(bitmap1, (float) 1, true, firstBrightnessRun) * 10;
+                                        firstBrightnessRun = false;
                                         first = false;
                                     }
                                     else {
-                                        for (int i = 0; i<10; i++)
+                                        for (int i = 0; i<10; i++) {
                                             perfTime += brightness(bitmap1, (float) 0.1, true, firstBrightnessRun);
+                                        }
                                     }
                                     runOnUiThread(new SetImageView(bitmap1));
-                                    firstBrightnessRun = false;
                                     calibrated = perforationHelper.midTestResult(bitmap1, perfTime);
                                     runOnUiThread(new SetTextRunnable(perfTime + "s"));
                                     perfTime = 0;
@@ -152,18 +172,18 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
 
                                 case 3:
                                     original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                                    Bitmap bitmap2 = adjustBrightness();
+                                    Bitmap bitmap2 = original.copy(Bitmap.Config.ARGB_8888, true);
                                     perfTime = 0;
                                     if (first) {
                                         perfTime = brightness(bitmap2, (float) 1, true, firstBrightnessRun) * 10;
                                         first = false;
+                                        firstBrightnessRun = false;
                                     }
                                     else {
                                         for (int i = 0; i<10; i++)
                                             perfTime += brightness(bitmap2, (float) 0.1, true, firstBrightnessRun);
                                     }
                                     runOnUiThread(new SetImageView(bitmap2));
-                                    firstBrightnessRun = false;
                                     calibrated = perforationHelper.midTestResult(bitmap2, perfTime);
                                     runOnUiThread(new SetTextRunnable(perfTime + "s"));
                                     perfTime = 0;
@@ -201,7 +221,15 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                             }
 
                         }
-                        perforationHelper.endCalibrationMode();
+                        switch (test) {
+                            case 0:
+                            case 1:
+                                perforations.put(test, perforationHelper.endCalibrationMode());
+                                break;
+                            case 3:
+                                perforations.put(2, perforationHelper.endCalibrationMode());
+                                break;
+                        }
                     } catch (RemoteException | InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -233,7 +261,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                     }
 
                     runOnUiThread(new SetTextRunnable("Running test..."));
-
                     switch (test){
                         //Run Black-Scholes
                         case 0:
@@ -248,12 +275,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         //Running picture brightness test with lower resolution picture
                         case 2:
                             original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
-                            adjustBrightness();
+                            adjustBrightnessNorm();
                         break;
                         //Running picture brightness test with higher resolution picture
                         case 3:
-                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                            adjustBrightness();
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
+                            adjustBrightnessPerf();
                         break;
                         //Running edge detection test
                         case 4:
@@ -440,7 +467,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     double perfTime = 0;
 
     //Main method for picture brightness test
-    private Bitmap adjustBrightness() {
+    private void adjustBrightnessNorm() {
         Bitmap bitmapNorm = original.copy(Bitmap.Config.ARGB_8888, true);
         final Handler handlerNorm = new Handler(getMainLooper());
         //We create handler and post picture for every increment in brightness, so the users see progress
@@ -452,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 //Every time we set image, so the users see the difference of every increment
                 imageView2.setImageBitmap(bitmapNorm);
                 shadowNorm = (float) (shadowNorm + 0.1);
-                if (shadowNorm < 10)
+                if (shadowNorm < 12)
                     handlerNorm.postDelayed(this, 1);
                 else {
                     //At the end we output test time results
@@ -463,6 +490,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }, 100);
         shadowNorm = 0;
         normTime = 0;
+    }
+
+    private void adjustBrightnessPerf() {
+        Bitmap bitmapNorm = original.copy(Bitmap.Config.ARGB_8888, true);
+        final Handler handlerNorm = new Handler(getMainLooper());
 
         //We do the exact thing for perforated function
         //  Perforated function means, that main loop has #pragma clang loop perforate (enable)
@@ -473,7 +505,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                 perfTime += brightness(bitmap, (float) 0.1, true, firstBrightnessRun);
                 imageView.setImageBitmap(bitmap);
                 shadowPerf = (float) (shadowPerf + 0.1);
-                if (shadowPerf < 10)
+                if (shadowPerf < 12)
                     handler.postDelayed(this, 1);
                 else {
                     runOnUiThread(new SetTextRunnable(mTV.getText() + "\nPerforated: " + perfTime + "s"));
@@ -482,10 +514,39 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         }, 100);
         perfTime = 0;
         shadowPerf = 0;
-
-        return bitmap;
     }
 
+    void setTest(int test){
+
+        AllPerforations allPerforations = perforations.get(test);
+
+        if (allPerforations != null) {
+            String[] options = new String[allPerforations.result.length];
+
+            DecimalFormat df = new DecimalFormat("0.00");
+
+            for (int i = 0; i < allPerforations.result.length; i++) {
+                options[i] = df.format(allPerforations.result[i]) + " / " + df.format(allPerforations.speedup[i]);
+            }
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this,
+                    android.R.layout.simple_spinner_item, options);
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            spinnerResults.setAdapter(adapter);
+            spinnerResults.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    testAcc = position;
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    testAcc = 0;
+                }
+            });
+        }
+    }
     /**
      * A native methods that is implemented by the 'native-lib' native library,
      * which is packaged with this application.

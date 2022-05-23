@@ -5,6 +5,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.example.AllPerforations;
 import com.example.IMyService;
 
 import org.opencv.android.OpenCVLoader;
@@ -42,6 +43,10 @@ public class PerforationHelper {
         firstRun = true;
     }
 
+    public void setTestId(int testId, int testAcc) throws RemoteException {
+        service.setTest(testId, testAcc);
+    }
+
     public boolean midTestResult(Bitmap perforatedPic, double time) throws RemoteException {
         if (firstRun){
             perfectPic = perforatedPic;
@@ -64,8 +69,8 @@ public class PerforationHelper {
         return service.midTestResult(retResult, time);
     }
 
-    public void endCalibrationMode() throws RemoteException {
-        service.endCalibrationMode();
+    public AllPerforations endCalibrationMode() throws RemoteException {
+        return service.endCalibrationMode();
     }
 
     private double compareBitmaps(Bitmap image1, Bitmap image2) {
@@ -78,9 +83,8 @@ public class PerforationHelper {
         double sim = (
                 similarity.val[0] +
                 similarity.val[1] +
-                similarity.val[2] +
-                similarity.val[3]
-                ) / 4.0;
+                similarity.val[2]
+                ) / 3.0;
 
         return sim;
     }

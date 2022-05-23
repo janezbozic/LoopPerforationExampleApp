@@ -21,6 +21,6 @@ interface IMyService {
 
     boolean midTestResult(double result, double time);
 
-    void endCalibrationMode();
+    AllPerforations endCalibrationMode();
 
 }

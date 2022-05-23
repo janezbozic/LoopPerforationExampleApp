@@ -8,6 +8,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.example.AllPerforations;
 import com.example.Constants;
 import com.example.IMyService;
 import com.example.LoopPerfFactor;
@@ -142,26 +143,39 @@ public class MyService extends Service
                     tempInt = 1;
                 double curRand = Math.random();
                 if (!(result >= prevResult && curRand > simAnealFactor || result < prevResult && curRand <= simAnealFactor)){
-                    LoopPerfFactor temp = new LoopPerfFactor(prevValue, 1000000);
-                    currentRates.replace(prevIndex, temp);
+                    LoopPerfFactor tempFac = new LoopPerfFactor(prevValue, 1000000);
+                    currentRates.replace(prevIndex, tempFac);
                 }
                 prevIndex = maxElementIdx;
                 prevValue = maxElement.perfFactor;
                 prevResult = result;
-                LoopPerfFactor temp = new LoopPerfFactor(tempInt, maxElement.factorLife);
-                currentRates.replace(maxElementIdx, temp);
+                LoopPerfFactor tempFac = new LoopPerfFactor(tempInt, maxElement.factorLife);
+                currentRates.replace(maxElementIdx, tempFac);
                 simAnealFactor -= 0.5/CUTOFF;
                 iter++;
                 return false;
             }
+
+            HashMap<Integer, LoopPerfFactor> nMap = new HashMap<>(currentRates);
+            PerfIterationInfo temp = new PerfIterationInfo(iter, time, result, nMap);
+            allPerforationsForTest.add(temp);
             iter++;
             return true;
         }
 
         @Override
-        public void endCalibrationMode() throws RemoteException {
+        public AllPerforations endCalibrationMode() throws RemoteException {
             perforationRates.putAll(currentRates);
             allPerforations.put(testId, allPerforationsForTest);
+            int len = allPerforationsForTest.size();
+            double [] results = new double[len];
+            double [] speedups = new double[len];
+            double firstRunTime = allPerforationsForTest.get(0).getTime();
+            for (int i = 0; i < len; i++) {
+                PerfIterationInfo temp = allPerforationsForTest.get(i);
+                results[i] = temp.getResult() * 100;
+                speedups[i] = firstRunTime/temp.getTime();
+            }
             allPerforationsForTest = null;
             calibrationMode = false;
             perfectTime = -1.0;
@@ -172,6 +186,8 @@ public class MyService extends Service
             prevResult = -1;
             prevIndex = -1;
             prevValue = -1;
+            
+            return new AllPerforations(results, speedups);
         }
 
     }

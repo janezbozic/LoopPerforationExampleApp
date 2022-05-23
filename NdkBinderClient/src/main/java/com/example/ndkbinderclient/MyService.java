@@ -13,6 +13,7 @@ import com.example.IMyService;
 import com.example.LoopPerfFactor;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class MyService extends Service
@@ -48,8 +49,11 @@ public class MyService extends Service
         int prevValue;
         HashMap<Integer, LoopPerfFactor> perforationRates = new HashMap<>();
         HashMap<Integer, LoopPerfFactor> currentRates;
+        LinkedList<PerfIterationInfo> allPerforationsForTest;
+        HashMap<Integer, LinkedList<PerfIterationInfo>> allPerforations = new HashMap<>();
         int CUTOFF = 100;
         double simAnealFactor;
+        int testId, testAcc;
 
         @Override
         public void basicTypes(int anInt, long aLong, boolean aBoolean, float aFloat,
@@ -76,10 +80,13 @@ public class MyService extends Service
 
             if (calibrationMode)
                 return currentRates.get(loopId);
-            else if (perforationRates.containsKey(loopId))
-                return perforationRates.get(loopId);
-            else
-                return new LoopPerfFactor(1, 1000000);
+            else {
+                if (allPerforations.containsKey(testId) &&
+                        allPerforations.get(testId).get(testAcc).getRates().containsKey(loopId))
+                    return allPerforations.get(testId).get(testAcc).getRates().get(loopId);
+                else
+                    return new LoopPerfFactor(1, 1000000);
+            }
         }
 
         @Override
@@ -87,12 +94,19 @@ public class MyService extends Service
             if (!calibrationMode) {
                 calibrationMode = true;
                 currentRates = new HashMap<>();
+                allPerforationsForTest = new LinkedList<>();
                 iter = 0;
                 simAnealFactor = 0.5;
             }
             prevResult = -1;
             prevValue = -1;
             prevIndex = -1;
+        }
+
+        @Override
+        public void setTest(int testId, int testAcc) throws RemoteException {
+            this.testId = testId;
+            this.testAcc = testAcc;
         }
 
         @Override
@@ -103,11 +117,20 @@ public class MyService extends Service
             if (iter == 0){
                 perfectResult = result;
                 perfectTime = time;
+                HashMap<Integer, LoopPerfFactor> nMap = new HashMap<>();
+                for (Integer key : currentRates.keySet()) {
+                    nMap.put(key, new LoopPerfFactor(1, 1000000));
+                }
+                PerfIterationInfo temp = new PerfIterationInfo(iter, time, result, nMap);
+                allPerforationsForTest.add(temp);
                 iter++;
                 return false;
             }
 
-            if (result < 0.9 || result > 1.1){
+            if (result < 0.9){
+                HashMap<Integer, LoopPerfFactor> nMap = new HashMap<>(currentRates);
+                PerfIterationInfo temp = new PerfIterationInfo(iter, time, result, nMap);
+                allPerforationsForTest.add(temp);
                 int maxElementIdx = currentRates.entrySet().stream().max((entry1, entry2) -> entry1.getValue().perfFactor >= entry2.getValue().getPerfFactor() ? 1 : -1)
                         .get().getKey();
                 if (Math.random() > 0.6){
@@ -131,7 +154,6 @@ public class MyService extends Service
                 iter++;
                 return false;
             }
-
             iter++;
             return true;
         }
@@ -139,6 +161,8 @@ public class MyService extends Service
         @Override
         public void endCalibrationMode() throws RemoteException {
             perforationRates.putAll(currentRates);
+            allPerforations.put(testId, allPerforationsForTest);
+            allPerforationsForTest = null;
             calibrationMode = false;
             perfectTime = -1.0;
             perfectResult = -1.0;

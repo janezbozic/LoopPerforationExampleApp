@@ -17,6 +17,8 @@ interface IMyService {
 
     void startCalibrationMode();
 
+    void setTest(int testId, int testAcc);
+
     boolean midTestResult(double result, double time);
 
     void endCalibrationMode();

@@ -131,6 +131,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         boolean calibrated = false;
 
                         runOnUiThread(new SetTextRunnable("Calibrating loops..."));
+                        perfTime = 0;
+                        normTime = 0;
 
                         boolean first = true;
 
@@ -153,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                 case 2:
                                     original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
                                     Bitmap bitmap1 = original.copy(Bitmap.Config.ARGB_8888, true);
-                                    perfTime = 0;
                                     if (first) {
                                         for (int i = 0; i<10; i++) {
                                             perfTime += brightness(bitmap1, (float) 0.1, true, firstBrightnessRun);
@@ -169,14 +170,12 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                     runOnUiThread(new SetImageView(bitmap1));
                                     calibrated = perforationHelper.midTestResult(bitmap1, perfTime);
                                     runOnUiThread(new SetTextRunnable(perfTime + "s"));
-                                    perfTime = 0;
                                     TimeUnit.SECONDS.sleep(1);
                                     break;
 
                                 case 3:
                                     original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
                                     Bitmap bitmap2 = original.copy(Bitmap.Config.ARGB_8888, true);
-                                    perfTime = 0;
                                     if (first) {
                                         perfTime = brightness(bitmap2, (float) 1, true, firstBrightnessRun) * 10;
                                         first = false;
@@ -189,7 +188,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                                     runOnUiThread(new SetImageView(bitmap2));
                                     calibrated = perforationHelper.midTestResult(bitmap2, perfTime);
                                     runOnUiThread(new SetTextRunnable(perfTime + "s"));
-                                    perfTime = 0;
                                     TimeUnit.SECONDS.sleep(1);
                                     break;
 
@@ -312,11 +310,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         case 5:
                             //Setting base bitmap
                             double perfTimeBlur = 0;
-                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                            for (int i = 0; i<100000; i++) {
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
+                            for (int i = 0; i<100; i++) {
                                 //Setting working copy
                                 Bitmap bitmapBlurPerf = original.copy(Bitmap.Config.ARGB_8888, true);
-                                perfTimeBlur = blur(bitmapBlurPerf, 120, true);
+                                perfTimeBlur += blur(bitmapBlurPerf, 120, true);
                                 //Setting perforated image
                                 runOnUiThread(new SetImageView2(bitmapBlurPerf));
                             }
@@ -338,8 +336,8 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                         case 8:
                             double normTimeBlur = 0;
                             //Setting base bitmap
-                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadhigh);
-                            for (int i = 0; i<100000; i++) {
+                            original = BitmapFactory.decodeResource(getResources(), R.drawable.breadlow);
+                            for (int i = 0; i<100; i++) {
                                 //Setting working copy
                                 Bitmap bitmapBlur = original.copy(Bitmap.Config.ARGB_8888, true);
                                 normTimeBlur += blur(bitmapBlur, 120, false);
@@ -364,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
     {
         super.onResume();
 
-        //When activity is back in use, we bind back to our service
+        //When activity is back in use, we bind back to our service,
         Intent intent = new Intent();
         intent.setClassName("com.example.ndkbinderclient",
                 "com.example.ndkbinderclient.MyService");

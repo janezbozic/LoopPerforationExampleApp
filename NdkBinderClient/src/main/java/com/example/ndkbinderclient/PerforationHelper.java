@@ -60,7 +60,8 @@ public class PerforationHelper {
             return false;
         }
         double result = compareBitmaps(perfectPic, perforatedPic);
-        return service.midTestResult(result, time);
+        double speedup = perfectTime / time;
+        return service.midTestResult(result, speedup);
     }
 
     public boolean midTestResult(double result, double time) throws RemoteException {
@@ -70,7 +71,8 @@ public class PerforationHelper {
             firstRun = false;
         }
         double retResult = 1-abs(result-perfectResult) / perfectResult;
-        return service.midTestResult(retResult, time);
+        double speedup = perfectTime / time;
+        return service.midTestResult(retResult, speedup);
     }
 
     public AllPerforations endCalibrationMode() throws RemoteException {

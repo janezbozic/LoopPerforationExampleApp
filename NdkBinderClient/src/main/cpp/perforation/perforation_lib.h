@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 //Our main perforation function, the call to it is inserted in out new loop perforation pass
-int CLANG_LOOP_PERFORATION_FUNCTION(int n);
+int CLANG_LOOP_PERFORATION_FUNCTION(int n, int upperValue);
 
 #ifdef __cplusplus
 }

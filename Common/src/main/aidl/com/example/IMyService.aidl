@@ -13,7 +13,7 @@ interface IMyService {
 
     //Declaration of a method for returning perforation factor
     //  AIDL will build the source
-    LoopPerfFactor getPerforationFactor (int loopId);
+    LoopPerfFactor getPerforationFactor (int loopId, int upperValue);
 
     void startCalibrationMode();
 

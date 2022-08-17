@@ -26,7 +26,7 @@ std::unordered_map<int, LoopInfo> prevFactors;
 
 //Our main perforation function, for which the call is inserted in compilation phase for every
 //  perforable loop
-int CLANG_LOOP_PERFORATION_FUNCTION(int loopId){
+int CLANG_LOOP_PERFORATION_FUNCTION(int loopId, int upperValue){
 
     //Iterator for hashmap
     auto itr = prevFactors.find(loopId);
@@ -44,7 +44,7 @@ int CLANG_LOOP_PERFORATION_FUNCTION(int loopId){
     //Declaring new object instance for AIDL communicaiton
     LoopPerfFactor newFactorPackage;
     //Calling method from the service for retrieving perforation factors
-    ScopedAStatus getPerforationFactorResult = g_spMyService->getPerforationFactor(loopId, &newFactorPackage);
+    ScopedAStatus getPerforationFactorResult = g_spMyService->getPerforationFactor(loopId, upperValue, &newFactorPackage);
 
     //Getting value of perforation factor
     int newFactor;

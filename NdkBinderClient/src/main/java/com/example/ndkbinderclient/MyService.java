@@ -41,15 +41,15 @@ public class MyService extends Service
     private static class MyServiceBinder extends IMyService.Stub
     {
 
-        private static final int N_T1 = 1000;
-        private static final int N_T2 = 500;
+        private static final int N_T1 = 50;
+        private static final int N_T2 = 30;
         private int counter_N_T2;
         int N_ACCEPTED;
         int N_B;
         LinkedList<PerfIterationInfo> acceptedPerforations;
         LinkedList<PerfIterationInfo> archivedPerforations;
         double phi;
-        int CUTOFF = 10000;
+        int CUTOFF = 300;
 
         static Random random = new Random();
 
@@ -79,7 +79,7 @@ public class MyService extends Service
 
         // Method for calculating perforation factor
         @Override
-        public LoopPerfFactor getPerforationFactor(int loopId) throws RemoteException {
+        public LoopPerfFactor getPerforationFactor(int loopId, int upperValue) throws RemoteException {
             if (calibrationMode && iter == 0) {
                 currentRates.putIfAbsent(loopId, new LoopPerfFactor(Integer.MAX_VALUE, 1000000));
                 return new LoopPerfFactor(1, 1000000);
@@ -158,7 +158,15 @@ public class MyService extends Service
                 for (Integer key : currentRates.keySet()) {
                     nMap.put(key, new LoopPerfFactor(1, 1000000));
                 }
-                newSolution = new PerfIterationInfo(iter, speedup, accuracy, nMap);
+                PerfIterationInfo x = new PerfIterationInfo(iter, speedup, accuracy, nMap);
+                archivedPerforations.add(x);
+                acceptedPerforations.add(x);
+                N_ACCEPTED++;
+
+                counter_N_T2++;
+                iter++;
+
+                return false;
             }
 
             // ARCHIVE
@@ -214,7 +222,7 @@ public class MyService extends Service
 
             // END TEMPERATURE
 
-            if (retToBase || iter % N_B == 0){ // maybe we have to have a sepparate counter
+            if (retToBase || iter > N_T1 && iter % N_B == 0){ // maybe we have to have a separate counter
                 // perform return to base
 
                 double [] degreesOfIso = getDegreesOfIsolation();
@@ -223,7 +231,11 @@ public class MyService extends Service
                 Arrays.sort(degreesOfIso);
 
                 int startIndex = degreesOfIso.length - numOfCandidates;
-                int baseIndex = random.nextInt(degreesOfIso.length-startIndex) + startIndex;
+                int baseIndex = random.nextInt(degreesOfIso.length-(startIndex-1)) + startIndex;
+
+                if (baseIndex >= degreesOfIso.length)
+                    baseIndex = degreesOfIso.length - 1;
+
 
                 currentRates = archivedPerforations.get(baseIndex).getFactors();
 
@@ -243,21 +255,26 @@ public class MyService extends Service
 
         private HashMap<Integer, LoopPerfFactor> executeSimStep(HashMap<Integer, LoopPerfFactor> currentRates) {
 
-            int temperature = (int) (TEMPERATURE[0] / 2);
-            temperature += (int) (TEMPERATURE[0] / 2);
+            double temperature = TEMPERATURE[0] / 2;
+            temperature += TEMPERATURE[1] / 2;
 
-            int nChange = currentRates.size() * (temperature / Integer.MAX_VALUE);
+            int nChange = (int) (currentRates.size() * (((double) temperature) / Integer.MAX_VALUE));
 
-            if (nChange == 0)
-                nChange = 1;
+            if (nChange < 0)
+                nChange = 0;
+            if (nChange > currentRates.size())
+                nChange = currentRates.size();
 
             for (int i = 0; i<nChange; i++){
                 int randomIdx = random.nextInt(currentRates.size());
-                int sub = random.nextInt(nChange-1) + 1;
-                int subbedValue = currentRates.get(randomIdx).perfFactor - sub;
+                if (randomIdx >= currentRates.size())
+                    randomIdx = currentRates.size() - 1;
+                int sub = random.nextInt((int) (Integer.MAX_VALUE * (((double) temperature) / Integer.MAX_VALUE)));
+                LoopPerfFactor t = currentRates.get(currentRates.keySet().toArray()[randomIdx]);
+                int subbedValue = t.perfFactor - sub;
                 if (subbedValue <= 0)
                     subbedValue = 1;
-                LoopPerfFactor newFactor = new LoopPerfFactor(subbedValue, currentRates.get(randomIdx).factorLife);
+                LoopPerfFactor newFactor = new LoopPerfFactor(subbedValue, t.factorLife);
                 currentRates.replace(randomIdx, newFactor);
             }
 
@@ -267,29 +284,29 @@ public class MyService extends Service
 
         private boolean domintesArchivedSolution(PerfIterationInfo newSolution) {
 
-            double accuracy = newSolution.getAccuracy();
-            double speedup = newSolution.getSpeedup();
+            int accuracy = (int) (newSolution.getAccuracy() * 100);
+            int speedup = (int) (newSolution.getSpeedup() * 100);
 
             boolean notSeen = true;
 
             for (int i = 0; i<archivedPerforations.size(); i++) {
                 PerfIterationInfo curArch = archivedPerforations.get(i);
-                double curAccuracy = curArch.getAccuracy();
-                double curSpeedup = curArch.getSpeedup();
-                if (accuracy >= curAccuracy){
+                int curAccuracy = (int) (curArch.getAccuracy() * 100);
+                int curSpeedup = (int) (curArch.getSpeedup() * 100);
+                if (accuracy == curAccuracy){
                     notSeen = false;
                     if (speedup > curSpeedup) {
                         archivedPerforations.remove(curArch);
                         return true;
                     }
                 }
-                if (speedup >= curSpeedup){
+                /* if (speedup == curSpeedup){
                     notSeen = false;
                     if (accuracy > curAccuracy) {
                         archivedPerforations.remove(curArch);
                         return true;
                     }
-                }
+                }*/
             }
 
             return notSeen;

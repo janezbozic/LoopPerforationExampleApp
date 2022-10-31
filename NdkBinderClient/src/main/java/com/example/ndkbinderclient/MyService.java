@@ -41,15 +41,17 @@ public class MyService extends Service
     private static class MyServiceBinder extends IMyService.Stub
     {
 
-        private static final int N_T1 = 50;
-        private static final int N_T2 = 30;
+        private static final int N_T1 = 200;
+        private static final int N_T2 = 100;
+        private static final int CUTOFF = 10000;
+
         private int counter_N_T2;
         int N_ACCEPTED;
         int N_B;
         LinkedList<PerfIterationInfo> acceptedPerforations;
         LinkedList<PerfIterationInfo> archivedPerforations;
         double phi;
-        int CUTOFF = 300;
+        int ONES_COUNTER;
 
         static Random random = new Random();
 
@@ -57,7 +59,10 @@ public class MyService extends Service
         int iter;
         double [] TEMPERATURE;
 
+        double MAX_TEMPERATURE = Double.MAX_VALUE;
+
         HashMap<Integer, LoopPerfFactor> currentRates;
+        HashMap<Integer, Integer> upperBounds;
         HashMap<Integer, LinkedList<PerfIterationInfo>> allPerforations = new HashMap<>();
 
         int testId, testAcc;
@@ -81,10 +86,10 @@ public class MyService extends Service
         @Override
         public LoopPerfFactor getPerforationFactor(int loopId, int upperValue) throws RemoteException {
             if (calibrationMode && iter == 0) {
-                currentRates.putIfAbsent(loopId, new LoopPerfFactor(Integer.MAX_VALUE, 1000000));
+                currentRates.putIfAbsent(loopId, new LoopPerfFactor(upperValue, 1000000));
+                upperBounds.putIfAbsent(loopId, upperValue);
                 return new LoopPerfFactor(1, 1000000);
             }
-
             if (calibrationMode)
                 return currentRates.get(loopId);
             else {
@@ -101,6 +106,7 @@ public class MyService extends Service
             if (!calibrationMode) {
                 calibrationMode = true;
                 currentRates = new HashMap<>();
+                upperBounds = new HashMap<>();
                 iter = 0;
 
                 acceptedPerforations = new LinkedList<>();
@@ -111,8 +117,9 @@ public class MyService extends Service
                 phi = 1.0;
 
                 TEMPERATURE = new double [2];
-                TEMPERATURE[0] = Double.MAX_VALUE;
-                TEMPERATURE[1] = Double.MAX_VALUE;
+                TEMPERATURE[0] = MAX_TEMPERATURE;
+                TEMPERATURE[1] = MAX_TEMPERATURE;
+                ONES_COUNTER = 0;
             }
         }
 
@@ -132,7 +139,7 @@ public class MyService extends Service
             double mean = perfInfo.stream().mapToDouble(PerfIterationInfo::getAccuracy).sum() / perfInfo.size();
             double SD = Math.sqrt(perfInfo.stream().mapToDouble(n -> Math.pow(n.getAccuracy() - mean, 2)).sum() / perfInfo.size());
 
-            return SD;
+            return SD * 100;
 
         }
 
@@ -151,7 +158,26 @@ public class MyService extends Service
             if (iter == CUTOFF)
                 return true;
 
-            PerfIterationInfo newSolution = new PerfIterationInfo(iter, speedup, accuracy, currentRates);
+            if (iter > N_T1) {
+                boolean allOnes = true;
+                for (int i = 0; i < currentRates.keySet().size(); i++) {
+                    if (currentRates.get(currentRates.keySet().toArray()[i]).perfFactor > 1) {
+                        allOnes = false;
+                        break;
+                    }
+                }
+                if (allOnes)
+                    ONES_COUNTER++;
+                else
+                    ONES_COUNTER = 0;
+
+                if (ONES_COUNTER > 3)
+                    return true;
+            }
+
+            HashMap<Integer, LoopPerfFactor> copiedRates = copyRates(currentRates);
+
+            PerfIterationInfo newSolution = new PerfIterationInfo(iter, speedup, accuracy, copiedRates);
 
             if (iter ==  0){
                 HashMap<Integer, LoopPerfFactor> nMap = new HashMap<>();
@@ -212,7 +238,7 @@ public class MyService extends Service
                 N_ACCEPTED = 0;
                 counter_N_T2 = 0;
 
-                double alphaAcc = Math.max(0.5, Math.exp(- (0.7 * TEMPERATURE[0] / getStandardDeviationAccuracy(acceptedPerforations))));    // ACCURACY TEMPERATURE
+                double alphaAcc = Math.max(0.5, Math.exp(- (0.7 * (TEMPERATURE[0] * 100) / getStandardDeviationAccuracy(acceptedPerforations))));    // ACCURACY TEMPERATURE - Tukaj mogoce tisti *100 ne bi smel bit
                 double alphaSpe = Math.max(0.5, Math.exp(- (0.7 * TEMPERATURE[1] / getStandardDeviationSpeedup(acceptedPerforations))));     // SPEEDUP TEMPERATURE
 
                 TEMPERATURE[0] *= alphaAcc;
@@ -245,7 +271,7 @@ public class MyService extends Service
                     N_B = 10;
             }
 
-            currentRates = executeSimStep(currentRates);
+            executeSimStep(currentRates);
 
             counter_N_T2++;
             iter++;
@@ -253,29 +279,34 @@ public class MyService extends Service
             return false;
         }
 
+        private HashMap<Integer, LoopPerfFactor> copyRates(HashMap<Integer, LoopPerfFactor> currentRates) {
+
+            HashMap<Integer, LoopPerfFactor> newRates = new HashMap<>(currentRates);
+            return newRates;
+
+        }
+
         private HashMap<Integer, LoopPerfFactor> executeSimStep(HashMap<Integer, LoopPerfFactor> currentRates) {
 
             double temperature = TEMPERATURE[0] / 2;
             temperature += TEMPERATURE[1] / 2;
 
-            int nChange = (int) (currentRates.size() * (((double) temperature) / Integer.MAX_VALUE));
+            int nChange = (int) (currentRates.size() * (((double) temperature) / MAX_TEMPERATURE));
 
-            if (nChange < 0)
-                nChange = 0;
-            if (nChange > currentRates.size())
-                nChange = currentRates.size();
+            nChange = Math.max(1, nChange);
+            nChange = Math.min(currentRates.size(), nChange);
 
             for (int i = 0; i<nChange; i++){
                 int randomIdx = random.nextInt(currentRates.size());
-                if (randomIdx >= currentRates.size())
-                    randomIdx = currentRates.size() - 1;
-                int sub = random.nextInt((int) (Integer.MAX_VALUE * (((double) temperature) / Integer.MAX_VALUE)));
-                LoopPerfFactor t = currentRates.get(currentRates.keySet().toArray()[randomIdx]);
-                int subbedValue = t.perfFactor - sub;
-                if (subbedValue <= 0)
-                    subbedValue = 1;
+                randomIdx = Math.min(currentRates.size() - 1, randomIdx);
+                int tempLoopId = (Integer) currentRates.keySet().toArray()[randomIdx];
+                LoopPerfFactor t = currentRates.get(tempLoopId);
+                int upperRandom = Math.max(1, (int)(t.perfFactor * 1.0 / 2));
+                int sub = random.nextInt(upperRandom);
+                sub = Math.max(sub, 1);
+                int subbedValue = Math.max(1, t.perfFactor - sub);
                 LoopPerfFactor newFactor = new LoopPerfFactor(subbedValue, t.factorLife);
-                currentRates.replace(randomIdx, newFactor);
+                currentRates.replace(tempLoopId, newFactor);
             }
 
             return currentRates;
@@ -300,13 +331,6 @@ public class MyService extends Service
                         return true;
                     }
                 }
-                /* if (speedup == curSpeedup){
-                    notSeen = false;
-                    if (accuracy > curAccuracy) {
-                        archivedPerforations.remove(curArch);
-                        return true;
-                    }
-                }*/
             }
 
             return notSeen;

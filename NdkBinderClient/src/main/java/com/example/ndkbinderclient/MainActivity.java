@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.ConditionVariable;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -18,6 +19,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,6 +27,9 @@ import com.example.AllPerforations;
 import com.example.Constants;
 import com.example.IMyService;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -227,9 +232,11 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
                             case 1:
                             case 5:
                                 perforations.put(test, perforationHelper.endCalibrationMode());
+                                writeResults(test);
                                 break;
                             case 2:
                                 perforations.put(2, perforationHelper.endCalibrationMode());
+                                writeResults(2);
                                 break;
                         }
                     } catch (RemoteException | InterruptedException e) {
@@ -355,6 +362,32 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         imageView = (ImageView) findViewById(R.id.imageView);
         imageView2 = (ImageView) findViewById(R.id.imageView2);
 
+    }
+
+    private void writeResults(int test) {
+        try
+        {
+            File root = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Results");
+            if (!root.exists()) {
+                root.mkdirs();
+            }
+            File gpxfile = new File(root, "Test.csv");
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append("Accuracy;Speedup\n");
+            AllPerforations allPerforations = perforations.get(test);
+            for (int i = 0; i<allPerforations.result.length; i++){
+                String s = allPerforations.result[i] + ";" + allPerforations.speedup[i] + "\n";
+                writer.append(s);
+            }
+            writer.flush();
+            writer.close();
+            //Toast.makeText(this, "Done", Toast.LENGTH_SHORT).show();
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+
+        }
     }
 
     @Override

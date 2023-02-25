@@ -1,4 +1,4 @@
-package com.example.ndkbinderclient;
+package com.diploma.loopperforationlibrary;
 
 import android.graphics.Bitmap;
 import android.os.IBinder;
@@ -11,6 +11,7 @@ import com.example.IMyService;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -19,6 +20,10 @@ import static org.opencv.core.CvType.CV_32F;
 import static java.lang.Math.abs;
 
 public class PerforationHelper {
+
+    static {
+        System.loadLibrary("loopperforationlibrary");
+    }
 
     private IMyService service;
     private boolean firstRun;
@@ -102,7 +107,7 @@ public class PerforationHelper {
         Scalar C1 = new Scalar(6.5025, 6.5025, 6.5025, 6.5025);
         Scalar C2 = new Scalar(58.5225, 58.5225, 58.5225, 58.5225);
 
-        int d = CV_32F;
+        int d = CvType.CV_32F;
 
         Mat I1 = new Mat();
         Mat I2 = new Mat();
@@ -177,5 +182,10 @@ public class PerforationHelper {
 
         return mssim;
     }
+
+    //For service connection
+    public native void onServiceConnected(IBinder binder);
+    //For service disconnection
+    public native void onServiceDisconnected();
 
 }

@@ -17,7 +17,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:enabled="true" android:name=".MyService" />
+        <service android:enabled="true" android:name="com.diploma.loopperforationlibrary.MyService" />
 
     </application>
 

@@ -1,4 +1,4 @@
-package com.example.ndkbinderclient;
+package com.diploma.loopperforationlibrary;
 
 import com.example.LoopPerfFactor;
 

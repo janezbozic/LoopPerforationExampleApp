@@ -19,13 +19,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.diploma.loopperforationlibrary.PerforationHelper;
+import com.diploma.loopperforationlibrary.ResultInfo;
 import com.example.AllPerforations;
 import com.example.Constants;
-import com.example.IMyService;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -398,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         //When activity is back in use, we bind back to our service,
         Intent intent = new Intent();
         intent.setClassName("com.example.ndkbinderclient",
-                "com.example.ndkbinderclient.MyService");
+                "com.diploma.loopperforationlibrary.MyService");
 
         Log.d(Constants.LOG_TAG, "[App] [java] bindService");
 
@@ -415,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         mIsServiceConnected = false;
 
         //Call to native function to disconnect from service
-        onServiceDisconnected();
+        perforationHelper.onServiceDisconnected();
 
         perforationHelper.disconnectService();
 
@@ -430,7 +430,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         Log.d(Constants.LOG_TAG, "[App] [java] onServiceConnected");
 
         //Call to native function for connecting to the service
-        onServiceConnected(iBinder);
+        perforationHelper.onServiceConnected(iBinder);
 
         perforationHelper.connectService(iBinder);
 
@@ -445,7 +445,7 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
         mIsServiceConnected = false;
 
         //Call to native function for disconnecting from the service
-        onServiceDisconnected();
+        perforationHelper.onServiceDisconnected();
         perforationHelper.disconnectService();
 
         Log.d(Constants.LOG_TAG, "[App] [java] onServiceDisconnected");
@@ -625,10 +625,6 @@ public class MainActivity extends AppCompatActivity implements ServiceConnection
      * A native methods that is implemented by the 'native-lib' native library,
      * which is packaged with this application.
      */
-    //For service connection
-    public native void onServiceConnected(IBinder binder);
-    //For service disconnection
-    public native void onServiceDisconnected();
     //For tests Black-Scholes and Monte-Carlo
     public native ResultInfo talkToService(int testId, boolean perf);
     //For picture brightness test

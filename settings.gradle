@@ -1,3 +1,2 @@
-include ':NdkBinderClient', ':Common'
+include ':NdkBinderClient', ':Common', ':LoopPerforationLibrary'
 rootProject.name = "AndroidNdkBinderExamples"
-include ':LoopPerforationLibrary'

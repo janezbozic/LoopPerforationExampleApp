@@ -16,10 +16,10 @@ project("loopperforationlibrary")
 
 add_library( # Sets the name of the library.
         loopperforationlibrary
-
         # Sets the library as a shared library.
         SHARED
-
+        perforation/LoopInfo.cpp
+        ${aidl_src_dir}/com/example/IMyService.cpp
         # Provides a relative path to your source file(s).
         loopperforationlibrary.cpp)
 
@@ -45,4 +45,5 @@ target_link_libraries( # Specifies the target library.
 
         # Links the target library to the log library
         # included in the NDK.
-        ${log-lib})
+        ${log-lib}
+        ${binder_ndk-lib})

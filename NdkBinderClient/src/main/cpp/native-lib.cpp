@@ -57,7 +57,7 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
         sum_res /= NUM_REP;
         allRunsPerf /= NUM_REP;
 
-        jclass cls = (*env).FindClass("com/example/ndkbinderclient/ResultInfo");
+        jclass cls = (*env).FindClass("com/diploma/loopperforationlibrary/ResultInfo");
         jmethodID midConstructor = (*env).GetMethodID(cls, "<init>", "(DD)V");
         jobject resultInfoObj = (*env).NewObject(cls, midConstructor, perfTime, sum_res);
         return resultInfoObj;
@@ -85,7 +85,7 @@ Java_com_example_ndkbinderclient_MainActivity_talkToService(
         perfTime /= NUM_REP;
         perforatedRuns /= NUM_REP;
 
-        jclass cls = (*env).FindClass("com/example/ndkbinderclient/ResultInfo");
+        jclass cls = (*env).FindClass("com/diploma/loopperforationlibrary/ResultInfo");
         jmethodID midConstructor = (*env).GetMethodID(cls, "<init>", "(DD)V");
         jobject resultInfoObj = (*env).NewObject(cls, midConstructor, perfTime, perforatedRuns);
         return resultInfoObj;
